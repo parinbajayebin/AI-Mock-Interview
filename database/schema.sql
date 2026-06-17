@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(255) NOT NULL,
     auth_provider VARCHAR(50) NOT NULL DEFAULT 'local', -- 'local', 'google'
     provider_id VARCHAR(255), -- Google User ID
+    is_active BOOLEAN NOT NULL DEFAULT FALSE, -- Must be active to log in (Google OAuth users bypass)
+    otp_code VARCHAR(10), -- 6-digit OTP code sent via SMTP
+    otp_expires_at TIMESTAMPTZ,
     reset_token VARCHAR(255), -- Temporary token for password recovery
     reset_token_expires_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

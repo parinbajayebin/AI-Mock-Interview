@@ -15,37 +15,51 @@ export default function Login() {
 
   // Initialize Google Sign-In Button
   useEffect(() => {
+    let checkInterval;
+    
     const initializeGoogleAuth = async () => {
       try {
         const res = await fetch('/api/auth/google/config');
         const data = await res.json();
         
-        if (data.client_id && window.google) {
-          window.google.accounts.id.initialize({
-            client_id: data.client_id,
-            callback: handleGoogleCredentialResponse,
-            auto_select: false
-          });
-          
-          window.google.accounts.id.renderButton(
-            document.getElementById("google-signin-btn"),
-            { 
-              theme: "filled_dark", 
-              size: "large", 
-              width: "100%", 
-              text: "signin_with",
-              shape: "rectangular"
-            }
-          );
+        if (!data.client_id) {
+          console.warn("Google Client ID not configured in backend");
+          return;
         }
+
+        // Poll every 100ms for window.google to be loaded by index.html script tag
+        checkInterval = setInterval(() => {
+          if (window.google) {
+            clearInterval(checkInterval);
+            
+            window.google.accounts.id.initialize({
+              client_id: data.client_id,
+              callback: handleGoogleCredentialResponse,
+              auto_select: false
+            });
+            
+            window.google.accounts.id.renderButton(
+              document.getElementById("google-signin-btn"),
+              { 
+                theme: "filled_dark", 
+                size: "large", 
+                width: "100%", 
+                text: "signin_with",
+                shape: "rectangular"
+              }
+            );
+          }
+        }, 100);
       } catch (err) {
         console.error("Google Auth initialization error:", err);
       }
     };
     
-    // Slight timeout to ensure script loads
-    const timer = setTimeout(initializeGoogleAuth, 500);
-    return () => clearTimeout(timer);
+    initializeGoogleAuth();
+    
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
   }, []);
 
   const handleGoogleCredentialResponse = async (response) => {

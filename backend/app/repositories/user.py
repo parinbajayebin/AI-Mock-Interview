@@ -27,13 +27,16 @@ class UserRepository:
         return result.scalars().first()
 
     @staticmethod
-    async def create_local_user(db: AsyncSession, schema: UserCreate) -> User:
-        """Create a standard local login user with hashed password."""
+    async def create_local_user(db: AsyncSession, schema: UserCreate, otp_code: str, otp_expires_at: datetime) -> User:
+        """Create a standard local login user with hashed password, initially inactive."""
         db_user = User(
             email=schema.email.strip().lower(),
             full_name=schema.full_name.strip(),
             hashed_password=get_password_hash(schema.password),
-            auth_provider="local"
+            auth_provider="local",
+            is_active=False,
+            otp_code=otp_code,
+            otp_expires_at=otp_expires_at
         )
         db.add(db_user)
         await db.commit()
@@ -42,18 +45,40 @@ class UserRepository:
 
     @staticmethod
     async def create_oauth_user(db: AsyncSession, email: str, full_name: str, provider: str, provider_id: str) -> User:
-        """Create an OAuth (e.g. Google) user with no password."""
+        """Create an OAuth (e.g. Google) user with no password, active by default."""
         db_user = User(
             email=email.strip().lower(),
             full_name=full_name.strip(),
             auth_provider=provider,
             provider_id=provider_id,
-            hashed_password=None
+            hashed_password=None,
+            is_active=True
         )
         db.add(db_user)
         await db.commit()
         await db.refresh(db_user)
         return db_user
+
+    @staticmethod
+    async def update_user_otp(db: AsyncSession, user: User, otp_code: str, otp_expires_at: datetime) -> User:
+        """Update OTP code and expiry for an existing user (e.g. resending)."""
+        user.otp_code = otp_code
+        user.otp_expires_at = otp_expires_at
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    @staticmethod
+    async def activate_user(db: AsyncSession, user: User) -> User:
+        """Mark user as active and clear verification OTP codes."""
+        user.is_active = True
+        user.otp_code = None
+        user.otp_expires_at = None
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
 
     @staticmethod
     async def update_reset_token(db: AsyncSession, user: User, token: Optional[str], expires_at: Optional[datetime]) -> User:

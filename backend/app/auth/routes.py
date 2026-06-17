@@ -1,6 +1,7 @@
 import uuid
 import smtplib
 import httpx
+import random
 from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -26,10 +27,58 @@ from app.schemas.user import (
     Token,
     ForgotPasswordRequest,
     ResetPasswordRequest,
-    GoogleCallbackRequest
+    GoogleCallbackRequest,
+    OTPVerificationRequest,
+    OTPResendRequest
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+# Helper function to send OTP email
+def send_otp_email(to_email: str, otp_code: str) -> bool:
+    # Fallback log print in case SMTP is not configured
+    if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
+        print("\n=== [SMTP NOT CONFIGURED] Fallback Verification OTP ===")
+        print(f"To Email: {to_email}")
+        print(f"OTP Code: {otp_code}")
+        print("=======================================================\n")
+        return True
+
+    try:
+        sender_email = settings.SMTP_SENDER_EMAIL or settings.SMTP_USERNAME
+        msg = MIMEMultipart()
+        msg['From'] = f"AI Mock Interview <{sender_email}>"
+        msg['To'] = to_email
+        msg['Subject'] = "Email Verification OTP - AI Mock Interview"
+
+        body = f"""
+        <html>
+            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                    <h2 style="color: #4f46e5; margin-top: 0;">AI Mock Interview Platform</h2>
+                    <p>Hello,</p>
+                    <p>Thank you for signing up! Please verify your email address using the following 6-digit One-Time Password (OTP). This code is valid for <strong>5 minutes</strong>:</p>
+                    <div style="margin: 30px 0; text-align: center;">
+                        <span style="display: inline-block; padding: 15px 35px; color: #4f46e5; background-color: #f0fdf4; border: 2px dashed #4f46e5; border-radius: 8px; font-size: 2rem; font-weight: bold; letter-spacing: 5px;">{otp_code}</span>
+                    </div>
+                    <p>If you did not request this, you can safely ignore this email.</p>
+                    <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;" />
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0;">Best regards,<br/>The AI Mock Interview Team</p>
+                </div>
+            </body>
+        </html>
+        """
+        msg.attach(MIMEText(body, 'html'))
+
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            server.sendmail(sender_email, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"\n[ERROR] Failed to send OTP email via SMTP: {str(e)}")
+        print(f"Fallback OTP Code: {otp_code}\n")
+        return False
 
 # Setup OAuth2 password scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
@@ -107,15 +156,33 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(schema: UserCreate, db: AsyncSession = Depends(get_db)):
-    """Registers a new email/password candidate account."""
+    """Registers a new email/password candidate account (requires verification)."""
     existing_user = await UserRepository.get_by_email(db, schema.email)
     if existing_user:
+        if existing_user.auth_provider == "google":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email is registered using Google Sign-in. Please use Google authentication."
+            )
+        
+        # If user registered locally but is not verified/active, resend OTP
+        if not existing_user.is_active:
+            otp_code = f"{random.randint(100000, 999999)}"
+            otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+            await UserRepository.update_user_otp(db, existing_user, otp_code, otp_expires_at)
+            send_otp_email(existing_user.email, otp_code)
+            return existing_user
+            
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A user with this email address already exists"
         )
     
-    user = await UserRepository.create_local_user(db, schema)
+    otp_code = f"{random.randint(100000, 999999)}"
+    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    
+    user = await UserRepository.create_local_user(db, schema, otp_code, otp_expires_at)
+    send_otp_email(user.email, otp_code)
     return user
 
 
@@ -127,6 +194,12 @@ async def login(schema: UserLogin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email address. An OTP verification code was sent to your inbox."
         )
 
     if not verify_password(schema.password, user.hashed_password):
@@ -149,6 +222,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Invalid email or password"
         )
 
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email address. An OTP verification code was sent to your inbox."
+        )
+
     if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -157,6 +236,69 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
     token = create_access_token(user.id)
     return Token(access_token=token, user=UserResponse.model_validate(user))
+
+
+@router.post("/verify-otp", response_model=Token)
+async def verify_otp(schema: OTPVerificationRequest, db: AsyncSession = Depends(get_db)):
+    """Verifies OTP code and activates user account, logging them in immediately."""
+    user = await UserRepository.get_by_email(db, schema.email)
+    if not user or user.auth_provider != "local":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid request: user email not found"
+        )
+        
+    if user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account is already verified and active. Please login."
+        )
+        
+    if not user.otp_code or user.otp_code != schema.otp_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification OTP code"
+        )
+        
+    expires_at = user.otp_expires_at
+    if expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Verification code has expired. Please request a new one."
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code state"
+        )
+        
+    # Activate user
+    await UserRepository.activate_user(db, user)
+    
+    # Log user in
+    token = create_access_token(user.id)
+    return Token(access_token=token, user=UserResponse.model_validate(user))
+
+
+@router.post("/resend-otp")
+async def resend_otp(schema: OTPResendRequest, db: AsyncSession = Depends(get_db)):
+    """Resends verification OTP code to the inactive user email."""
+    user = await UserRepository.get_by_email(db, schema.email)
+    if not user or user.auth_provider != "local" or user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code cannot be sent for this account"
+        )
+        
+    otp_code = f"{random.randint(100000, 999999)}"
+    otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    
+    await UserRepository.update_user_otp(db, user, otp_code, otp_expires_at)
+    send_otp_email(user.email, otp_code)
+    return {"message": "A new verification OTP code has been sent to your email."}
 
 
 @router.get("/google/config")
@@ -211,13 +353,12 @@ async def google_callback(payload: GoogleCallbackRequest, db: AsyncSession = Dep
 
     user = await UserRepository.get_by_email(db, email)
     if user:
-        # Link user if they logged in before locally or provider details aren't stored
+        # Prevent Google OAuth signup/login if the email is already registered locally
         if user.auth_provider == "local":
-            user.auth_provider = "google"
-            user.provider_id = google_sub
-            db.add(user)
-            await db.commit()
-            await db.refresh(user)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email is already registered with email and password. Please log in using your password."
+            )
         elif user.provider_id != google_sub:
             user.provider_id = google_sub
             db.add(user)

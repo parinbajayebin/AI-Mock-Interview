@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy import String, DateTime
+from sqlalchemy import String, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
@@ -46,6 +46,25 @@ class User(Base):
     # provider_id VARCHAR(255) (Nullable, Google User ID)
     provider_id: Mapped[Optional[str]] = mapped_column(
         String(255),
+        nullable=True
+    )
+
+    # is_active BOOLEAN NOT NULL DEFAULT FALSE
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+
+    # otp_code VARCHAR(10) (Nullable)
+    otp_code: Mapped[Optional[str]] = mapped_column(
+        String(10),
+        nullable=True
+    )
+
+    # otp_expires_at TIMESTAMPTZ (Nullable)
+    otp_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         nullable=True
     )
     

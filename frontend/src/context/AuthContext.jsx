@@ -89,6 +89,24 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const verifyOtp = async (email, otpCode) => {
+    const data = await apiFetch('/api/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp_code: otpCode }),
+    });
+    localStorage.setItem('token', data.access_token);
+    setToken(data.access_token);
+    setUser(data.user);
+    return data.user;
+  };
+
+  const resendOtp = async (email) => {
+    return apiFetch('/api/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  };
+
   const sendForgotPassword = async (email) => {
     return apiFetch('/api/auth/forgot-password', {
       method: 'POST',
@@ -114,6 +132,8 @@ export const AuthProvider = ({ children }) => {
       handleGoogleCallback,
       sendForgotPassword,
       resetPassword,
+      verifyOtp,
+      resendOtp,
       apiFetch
     }}>
       {children}

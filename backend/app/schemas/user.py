@@ -13,6 +13,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: uuid.UUID
     auth_provider: str
+    is_active: bool
     created_at: datetime
     updated_at: datetime
 
@@ -38,3 +39,11 @@ class ResetPasswordRequest(BaseModel):
 
 class GoogleCallbackRequest(BaseModel):
     id_token: str = Field(..., description="Google ID Token returned from the frontend authentication flow")
+
+class OTPVerificationRequest(BaseModel):
+    email: EmailStr = Field(..., description="Email address to verify")
+    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+class OTPResendRequest(BaseModel):
+    email: EmailStr = Field(..., description="Email address to send new OTP")
+
