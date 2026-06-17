@@ -19,6 +19,7 @@ from app.core.security import (
     create_access_token,
     decode_access_token
 )
+from app.models.user import User
 from app.repositories.user import UserRepository
 from app.schemas.user import (
     UserCreate,
@@ -72,7 +73,9 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
 
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
-            server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            # Strip spaces from App Passwords if present
+            smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
+            server.login(settings.SMTP_USERNAME, smtp_pass)
             server.sendmail(sender_email, to_email, msg.as_string())
         return True
     except Exception as e:
@@ -123,7 +126,9 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
 
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
-            server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            # Strip spaces from App Passwords if present
+            smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
+            server.login(settings.SMTP_USERNAME, smtp_pass)
             server.sendmail(sender_email, to_email, msg.as_string())
         return True
     except Exception as e:

@@ -24,6 +24,8 @@ services:
       dockerfile: Dockerfile
     container_name: mock_interview_backend
     restart: always
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_secure_pass}@db:5432/${POSTGRES_DB:-ai_mock_interview}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}

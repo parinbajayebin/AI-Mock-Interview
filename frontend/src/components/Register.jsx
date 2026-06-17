@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, User, AlertTriangle, CheckCircle, ArrowLeft, ArrowRight, ShieldAlert, KeyRound } from 'lucide-react';
 
 export default function Register() {
-  const { register, verifyOtp, resendOtp, handleGoogleCallback } = useAuth();
+  const { register, verifyOtp, resendOtp, handleGoogleCallback, logout } = useAuth();
   const navigate = useNavigate();
 
   // Wizard state: 1 = Signup Form, 2 = OTP Verification
@@ -25,40 +25,61 @@ export default function Register() {
   // Resend OTP countdown timer
   const [resendTimer, setResendTimer] = useState(0);
 
+  // Clear stale session on mount
+  useEffect(() => {
+    logout();
+  }, []);
+
   // Initialize Google Sign-in for Signup
   useEffect(() => {
     if (step !== 1) return;
+    let checkInterval;
 
     const initializeGoogleAuth = async () => {
       try {
         const res = await fetch('/api/auth/google/config');
         const data = await res.json();
-        
-        if (data.client_id && window.google) {
-          window.google.accounts.id.initialize({
-            client_id: data.client_id,
-            callback: handleGoogleCredentialResponse,
-            auto_select: false
-          });
-          
-          window.google.accounts.id.renderButton(
-            document.getElementById("google-signup-btn"),
-            { 
-              theme: "filled_dark", 
-              size: "large", 
-              width: "100%", 
-              text: "signup_with",
-              shape: "rectangular"
-            }
-          );
+
+        if (!data.client_id) {
+          console.warn("Google Client ID not configured in backend");
+          return;
         }
+
+        // Poll every 100ms for window.google to be loaded by index.html script tag
+        checkInterval = setInterval(() => {
+          if (window.google) {
+            clearInterval(checkInterval);
+
+            window.google.accounts.id.initialize({
+              client_id: data.client_id,
+              callback: handleGoogleCredentialResponse,
+              auto_select: false
+            });
+
+            const btnEl = document.getElementById("google-signup-btn");
+            if (btnEl) {
+              window.google.accounts.id.renderButton(
+                btnEl,
+                {
+                  theme: "filled_dark",
+                  size: "large",
+                  width: "100%",
+                  text: "signup_with",
+                  shape: "rectangular"
+                }
+              );
+            }
+          }
+        }, 100);
       } catch (err) {
         console.error("Google Auth signup initialization error:", err);
       }
     };
-    
-    const timer = setTimeout(initializeGoogleAuth, 500);
-    return () => clearTimeout(timer);
+
+    initializeGoogleAuth();
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
   }, [step]);
 
   // Handle countdown timer for OTP resend
@@ -110,6 +131,13 @@ export default function Register() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+
+    // Name validation: letters, spaces, hyphens, apostrophes only, min 2 chars, max 50 chars
+    const nameRegex = /^[a-zA-Z\s'-]{2,50}$/;
+    if (!nameRegex.test(fullName.trim())) {
+      setErrorMsg('Full Name must contain only letters, spaces, hyphens, or apostrophes (2-50 characters)');
+      return;
+    }
 
     if (password.length < 6) {
       setErrorMsg('Password must be at least 6 characters long');
@@ -166,7 +194,7 @@ export default function Register() {
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
     setErrorMsg('');
-    setSuccessMsg('');
+    // Do not clear successMsg immediately to prevent layout shift during brief load state
 
     try {
       setIsLoading(true);
@@ -187,7 +215,7 @@ export default function Register() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl -z-10 animate-pulse-slow"></div>
 
       <div className="w-full max-w-md glass-panel p-8 rounded-2xl border border-slate-800 shadow-2xl">
-        
+
         {step === 1 ? (
           /* ==============================================================================
              STEP 1: USER DETAILS SIGNUP FORM
@@ -262,7 +290,7 @@ export default function Register() {
                     required
                   />
                 </div>
-                
+
                 {/* Visual Password Strength Meter */}
                 {password && (
                   <div className="mt-2.5 space-y-1.5">
@@ -321,7 +349,7 @@ export default function Register() {
 
             {/* Google OAuth signup option */}
             <div className="w-full flex justify-center mb-4">
-              <div id="google-signup-btn" className="w-full min-h-[44px]"></div>
+              <div id="google-signup-btn" className="flex justify-center w-full min-h-[44px]"></div>
             </div>
 
             <p className="text-center text-slate-400 text-sm mt-6">

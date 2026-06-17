@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-  const { login, handleGoogleCallback } = useAuth();
+  const { login, handleGoogleCallback, logout } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -12,6 +12,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
+
+  // Clear stale session on mount
+  useEffect(() => {
+    logout();
+  }, []);
 
   // Initialize Google Sign-In Button
   useEffect(() => {
@@ -192,7 +197,7 @@ export default function Login() {
 
         {/* Google OAuth Login Button Target */}
         <div className="w-full flex justify-center mb-6">
-          <div id="google-signin-btn" className="w-full min-h-[44px]"></div>
+          <div id="google-signin-btn" className="flex justify-center w-full min-h-[44px]"></div>
         </div>
 
         <p className="text-center text-slate-400 text-sm mt-6">

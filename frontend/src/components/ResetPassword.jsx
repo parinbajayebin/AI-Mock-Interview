@@ -15,6 +15,27 @@ export default function ResetPassword() {
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Evaluate Password Strength
+  const evaluatePasswordStrength = (pwd) => {
+    let score = 0;
+    if (!pwd) return { score, label: 'Weak', color: 'bg-slate-700', percent: 'w-0' };
+    if (pwd.length > 5) score += 1;
+    if (pwd.length > 8) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+    
+    if (score <= 2) {
+      return { score, label: 'Weak', color: 'bg-red-500', percent: 'w-1/3' };
+    } else if (score <= 4) {
+      return { score, label: 'Medium Strength', color: 'bg-yellow-500', percent: 'w-2/3' };
+    } else {
+      return { score, label: 'Strong', color: 'bg-emerald-500', percent: 'w-full' };
+    }
+  };
+
+  const strength = evaluatePasswordStrength(password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -109,6 +130,21 @@ export default function ResetPassword() {
                   required
                 />
               </div>
+
+              {/* Visual Password Strength Meter */}
+              {password && (
+                <div className="mt-2">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider mb-1">
+                    <span className="text-slate-400">Password strength:</span>
+                    <span className={strength.score <= 2 ? "text-red-400" : strength.score <= 4 ? "text-yellow-400" : "text-emerald-400"}>
+                      {strength.label}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className={`h-full ${strength.color} ${strength.percent} transition-all duration-300`}></div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
