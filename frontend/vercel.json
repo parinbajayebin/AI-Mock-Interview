@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://ai-mock-interview-do4p.onrender.com/api/$1"
+    }
+  ]
+}

@@ -9,9 +9,9 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://ai-mock-interview-do4p.onrender.com',
         changeOrigin: true,
-        secure: false
+        secure: true
       }
     }
   }
