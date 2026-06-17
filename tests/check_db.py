@@ -4,9 +4,9 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
 
-from app.core.database import SessionLocal
-from sqlalchemy import select
-from app.models.user import User
+from app.core.database import SessionLocal  # type: ignore
+from sqlalchemy import select  # type: ignore
+from app.models.user import User  # type: ignore
 
 async def main():
     try:
