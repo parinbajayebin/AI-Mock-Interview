@@ -1,0 +1,32 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.auth.routes import router as auth_router
+
+app = FastAPI(
+    title="AI-Powered Mock Interview Platform API",
+    description="Backend API for managing user authentication, resume uploads, interview generation, and response evaluations.",
+    version="1.0.0"
+)
+
+# Configure CORS Middleware
+# Allows the React frontend (running locally on port 5173 or in Docker on port 80) to query endpoints
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost", "https://localhost"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include Routers
+# All auth endpoints will be exposed under /api/auth/*
+app.include_router(auth_router, prefix="/api")
+
+@app.get("/", tags=["Root"])
+async def root():
+    """Health check and navigation API endpoint."""
+    return {
+        "message": "Welcome to the AI-Powered Mock Interview API",
+        "docs_url": "/docs",
+        "status": "healthy"
+    }
