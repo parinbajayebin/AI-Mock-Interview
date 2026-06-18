@@ -322,6 +322,58 @@ async def get_google_config():
     return {"client_id": settings.GOOGLE_CLIENT_ID}
 
 
+@router.get("/test-smtp")
+async def test_smtp(email: str):
+    """Temporary test endpoint to diagnose SMTP failures on Render."""
+    info = {}
+    try:
+        smtp_user = settings.smtp_username
+        smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
+        
+        info = {
+            "host": settings.SMTP_HOST,
+            "port": settings.SMTP_PORT,
+            "username_configured": bool(smtp_user),
+            "username": smtp_user,
+            "password_configured": bool(smtp_pass),
+            "sender_email": settings.SMTP_SENDER_EMAIL or smtp_user
+        }
+        
+        if not smtp_user or not smtp_pass:
+            return {"status": "error", "message": "SMTP credentials not configured in settings", "info": info}
+            
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart()
+        msg['From'] = f"AI Mock Interview Test <{info['sender_email']}>"
+        msg['To'] = email
+        msg['Subject'] = "SMTP Connection Test"
+        msg.attach(MIMEText("This is a diagnostic test email.", 'plain'))
+        
+        if settings.SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
+        else:
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
+            server.starttls()
+            
+        with server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(info['sender_email'], email, msg.as_string())
+            
+        return {"status": "success", "message": "Email sent successfully!", "info": info}
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "message": str(e),
+            "exception_type": type(e).__name__,
+            "traceback": traceback.format_exc(),
+            "info": info
+        }
+
+
 @router.post("/google/callback", response_model=Token)
 async def google_callback(payload: GoogleCallbackRequest, db: AsyncSession = Depends(get_db)):
     """Verifies Google Client credential tokens and returns session JWT."""
