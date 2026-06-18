@@ -37,6 +37,49 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Helper function to send OTP email
 def send_otp_email(to_email: str, otp_code: str) -> bool:
+    body = f"""
+    <html>
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                <h2 style="color: #4f46e5; margin-top: 0;">AI Mock Interview Platform</h2>
+                <p>Hello,</p>
+                <p>Thank you for signing up! Please verify your email address using the following 6-digit One-Time Password (OTP). This code is valid for <strong>5 minutes</strong>:</p>
+                <div style="margin: 30px 0; text-align: center;">
+                    <span style="display: inline-block; padding: 15px 35px; color: #4f46e5; background-color: #f0fdf4; border: 2px dashed #4f46e5; border-radius: 8px; font-size: 2rem; font-weight: bold; letter-spacing: 5px;">{otp_code}</span>
+                </div>
+                <p>If you did not request this, you can safely ignore this email.</p>
+                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;" />
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0;">Best regards,<br/>The AI Mock Interview Team</p>
+            </div>
+        </body>
+    </html>
+    """
+
+    if settings.RESEND_API_KEY:
+        try:
+            import httpx
+            headers = {
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            sender = settings.RESEND_SENDER
+            sender_name = "AI Mock Interview <onboarding@resend.dev>" if sender == "onboarding@resend.dev" else f"AI Mock Interview <{sender}>"
+            
+            payload = {
+                "from": sender_name,
+                "to": [to_email],
+                "subject": "Email Verification OTP - AI Mock Interview",
+                "html": body
+            }
+            with httpx.Client() as client:
+                r = client.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
+                if r.status_code in (200, 201):
+                    return True
+                else:
+                    print(f"[ERROR] Resend API error: {r.status_code} - {r.text}")
+        except Exception as e:
+            print(f"[ERROR] Failed to send email via Resend API: {str(e)}")
+
     # Fallback log print in case SMTP is not configured
     if not settings.smtp_username or not settings.SMTP_PASSWORD:
         print("\n=== [SMTP NOT CONFIGURED] Fallback Verification OTP ===")
@@ -51,24 +94,6 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         msg['From'] = f"AI Mock Interview <{sender_email}>"
         msg['To'] = to_email
         msg['Subject'] = "Email Verification OTP - AI Mock Interview"
-
-        body = f"""
-        <html>
-            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-                    <h2 style="color: #4f46e5; margin-top: 0;">AI Mock Interview Platform</h2>
-                    <p>Hello,</p>
-                    <p>Thank you for signing up! Please verify your email address using the following 6-digit One-Time Password (OTP). This code is valid for <strong>5 minutes</strong>:</p>
-                    <div style="margin: 30px 0; text-align: center;">
-                        <span style="display: inline-block; padding: 15px 35px; color: #4f46e5; background-color: #f0fdf4; border: 2px dashed #4f46e5; border-radius: 8px; font-size: 2rem; font-weight: bold; letter-spacing: 5px;">{otp_code}</span>
-                    </div>
-                    <p>If you did not request this, you can safely ignore this email.</p>
-                    <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;" />
-                    <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0;">Best regards,<br/>The AI Mock Interview Team</p>
-                </div>
-            </body>
-        </html>
-        """
         msg.attach(MIMEText(body, 'html'))
 
         if settings.SMTP_PORT == 465:
@@ -94,7 +119,49 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 # Helper function to send reset email
 def send_reset_email(to_email: str, reset_token: str) -> bool:
     reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
-    
+    body = f"""
+    <html>
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                <h2 style="color: #4f46e5; margin-top: 0;">AI Mock Interview Platform</h2>
+                <p>Hello,</p>
+                <p>We received a request to reset the password for your account. Click the button below to set a new password. This link is valid for <strong>15 minutes</strong>:</p>
+                <div style="margin: 30px 0; text-align: center;">
+                    <a href="{reset_link}" style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background-color 0.2s;">Reset Password</a>
+                </div>
+                <p>If you did not request this, you can safely ignore this email.</p>
+                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;" />
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0;">Best regards,<br/>The AI Mock Interview Team</p>
+            </div>
+        </body>
+    </html>
+    """
+
+    if settings.RESEND_API_KEY:
+        try:
+            import httpx
+            headers = {
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            sender = settings.RESEND_SENDER
+            sender_name = "AI Mock Interview <onboarding@resend.dev>" if sender == "onboarding@resend.dev" else f"AI Mock Interview <{sender}>"
+            
+            payload = {
+                "from": sender_name,
+                "to": [to_email],
+                "subject": "Reset Your Password - AI Mock Interview",
+                "html": body
+            }
+            with httpx.Client() as client:
+                r = client.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
+                if r.status_code in (200, 201):
+                    return True
+                else:
+                    print(f"[ERROR] Resend API error: {r.status_code} - {r.text}")
+        except Exception as e:
+            print(f"[ERROR] Failed to send email via Resend API: {str(e)}")
+
     # Fallback log print in case SMTP is not configured
     if not settings.smtp_username or not settings.SMTP_PASSWORD:
         print("\n=== [SMTP NOT CONFIGURED] Fallback Password Reset URL ===")
@@ -109,24 +176,6 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
         msg['From'] = f"AI Mock Interview <{sender_email}>"
         msg['To'] = to_email
         msg['Subject'] = "Reset Your Password - AI Mock Interview"
-
-        body = f"""
-        <html>
-            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-                    <h2 style="color: #4f46e5; margin-top: 0;">AI Mock Interview Platform</h2>
-                    <p>Hello,</p>
-                    <p>We received a request to reset the password for your account. Click the button below to set a new password. This link is valid for <strong>15 minutes</strong>:</p>
-                    <div style="margin: 30px 0; text-align: center;">
-                        <a href="{reset_link}" style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background-color 0.2s;">Reset Password</a>
-                    </div>
-                    <p>If you did not request this, you can safely ignore this email.</p>
-                    <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;" />
-                    <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0;">Best regards,<br/>The AI Mock Interview Team</p>
-                </div>
-            </body>
-        </html>
-        """
         msg.attach(MIMEText(body, 'html'))
 
         if settings.SMTP_PORT == 465:
@@ -324,13 +373,40 @@ async def get_google_config():
 
 @router.get("/test-smtp")
 async def test_smtp(email: str):
-    """Temporary test endpoint to diagnose SMTP failures on Render."""
+    """Temporary test endpoint to diagnose SMTP or Resend API failures on Render."""
     info = {}
     try:
+        if settings.RESEND_API_KEY:
+            info = {
+                "provider": "Resend",
+                "api_key_configured": True,
+                "sender": settings.RESEND_SENDER
+            }
+            import httpx
+            headers = {
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            sender_name = "AI Mock Interview Test <onboarding@resend.dev>" if settings.RESEND_SENDER == "onboarding@resend.dev" else f"AI Mock Interview Test <{settings.RESEND_SENDER}>"
+            
+            payload = {
+                "from": sender_name,
+                "to": [email],
+                "subject": "Resend API Connection Test",
+                "html": "<p>This is a diagnostic test email via Resend API.</p>"
+            }
+            with httpx.Client() as client:
+                r = client.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
+                if r.status_code in (200, 201):
+                    return {"status": "success", "message": "Email sent successfully via Resend API!", "info": info, "response": r.json()}
+                else:
+                    return {"status": "error", "message": f"Resend API error: {r.status_code}", "response": r.text, "info": info}
+
         smtp_user = settings.smtp_username
         smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
         
         info = {
+            "provider": "SMTP",
             "host": settings.SMTP_HOST,
             "port": settings.SMTP_PORT,
             "username_configured": bool(smtp_user),
@@ -350,7 +426,7 @@ async def test_smtp(email: str):
         msg['From'] = f"AI Mock Interview Test <{info['sender_email']}>"
         msg['To'] = email
         msg['Subject'] = "SMTP Connection Test"
-        msg.attach(MIMEText("This is a diagnostic test email.", 'plain'))
+        msg.attach(MIMEText("This is a diagnostic test email via SMTP.", 'plain'))
         
         if settings.SMTP_PORT == 465:
             server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)

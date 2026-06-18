@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: Optional[str] = Field(default=None)
     GOOGLE_CLIENT_SECRET: Optional[str] = Field(default=None)
 
+    # Resend Email Settings
+    RESEND_API_KEY: Optional[str] = Field(default=None)
+    RESEND_SENDER: str = Field(default="onboarding@resend.dev")
+
     # SMTP Settings
     SMTP_HOST: str = Field(default="smtp.gmail.com")
     SMTP_PORT: int = Field(default=465)
