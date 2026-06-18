@@ -71,8 +71,13 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         """
         msg.attach(MIMEText(body, 'html'))
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+        if settings.SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
+        else:
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
             server.starttls()
+
+        with server:
             # Strip spaces from App Passwords if present
             smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
             server.login(settings.SMTP_USERNAME, smtp_pass)
@@ -124,8 +129,13 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
         """
         msg.attach(MIMEText(body, 'html'))
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+        if settings.SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
+        else:
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
             server.starttls()
+
+        with server:
             # Strip spaces from App Passwords if present
             smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
             server.login(settings.SMTP_USERNAME, smtp_pass)

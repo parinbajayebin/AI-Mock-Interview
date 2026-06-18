@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # SMTP Settings
     SMTP_HOST: str = Field(default="smtp.gmail.com")
-    SMTP_PORT: int = Field(default=587)
+    SMTP_PORT: int = Field(default=465)
     SMTP_USERNAME: Optional[str] = Field(default=None)
     SMTP_PASSWORD: Optional[str] = Field(default=None)
     SMTP_SENDER_EMAIL: Optional[str] = Field(default=None)
