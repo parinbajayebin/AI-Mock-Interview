@@ -38,7 +38,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 # Helper function to send OTP email
 def send_otp_email(to_email: str, otp_code: str) -> bool:
     # Fallback log print in case SMTP is not configured
-    if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
+    if not settings.smtp_username or not settings.SMTP_PASSWORD:
         print("\n=== [SMTP NOT CONFIGURED] Fallback Verification OTP ===")
         print(f"To Email: {to_email}")
         print(f"OTP Code: {otp_code}")
@@ -46,7 +46,7 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         return True
 
     try:
-        sender_email = settings.SMTP_SENDER_EMAIL or settings.SMTP_USERNAME
+        sender_email = settings.SMTP_SENDER_EMAIL or settings.smtp_username
         msg = MIMEMultipart()
         msg['From'] = f"AI Mock Interview <{sender_email}>"
         msg['To'] = to_email
@@ -80,7 +80,7 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         with server:
             # Strip spaces from App Passwords if present
             smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
-            server.login(settings.SMTP_USERNAME, smtp_pass)
+            server.login(settings.smtp_username, smtp_pass)
             server.sendmail(sender_email, to_email, msg.as_string())
         return True
     except Exception as e:
@@ -96,7 +96,7 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
     reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
     
     # Fallback log print in case SMTP is not configured
-    if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
+    if not settings.smtp_username or not settings.SMTP_PASSWORD:
         print("\n=== [SMTP NOT CONFIGURED] Fallback Password Reset URL ===")
         print(f"To Email: {to_email}")
         print(f"Reset Link: {reset_link}")
@@ -104,7 +104,7 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
         return True
 
     try:
-        sender_email = settings.SMTP_SENDER_EMAIL or settings.SMTP_USERNAME
+        sender_email = settings.SMTP_SENDER_EMAIL or settings.smtp_username
         msg = MIMEMultipart()
         msg['From'] = f"AI Mock Interview <{sender_email}>"
         msg['To'] = to_email
@@ -138,7 +138,7 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
         with server:
             # Strip spaces from App Passwords if present
             smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
-            server.login(settings.SMTP_USERNAME, smtp_pass)
+            server.login(settings.smtp_username, smtp_pass)
             server.sendmail(sender_email, to_email, msg.as_string())
         return True
     except Exception as e:

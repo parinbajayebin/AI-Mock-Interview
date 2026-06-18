@@ -30,8 +30,13 @@ class Settings(BaseSettings):
     SMTP_HOST: str = Field(default="smtp.gmail.com")
     SMTP_PORT: int = Field(default=465)
     SMTP_USERNAME: Optional[str] = Field(default=None)
+    SMTP_EMAIL: Optional[str] = Field(default=None)
     SMTP_PASSWORD: Optional[str] = Field(default=None)
     SMTP_SENDER_EMAIL: Optional[str] = Field(default=None)
+
+    @property
+    def smtp_username(self) -> Optional[str]:
+        return self.SMTP_USERNAME or self.SMTP_EMAIL
 
     # Supabase Settings
     SUPABASE_URL: Optional[str] = Field(default=None)
