@@ -63,7 +63,7 @@ export default function Register() {
                 {
                   theme: "filled_dark",
                   size: "large",
-                  width: "100%",
+                  width: 350,
                   text: "signup_with",
                   shape: "rectangular"
                 }

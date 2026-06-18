@@ -48,7 +48,7 @@ export default function Login() {
               { 
                 theme: "filled_dark", 
                 size: "large", 
-                width: "100%", 
+                width: 350, 
                 text: "signin_with",
                 shape: "rectangular"
               }
