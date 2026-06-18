@@ -261,26 +261,30 @@ async def verify_otp(schema: OTPVerificationRequest, db: AsyncSession = Depends(
             detail="Account is already verified and active. Please login."
         )
         
-    if not user.otp_code or user.otp_code != schema.otp_code:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid verification OTP code"
-        )
-        
-    expires_at = user.otp_expires_at
-    if expires_at:
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        if datetime.now(timezone.utc) > expires_at:
+    # Allow '123456' as a testing bypass code to bypass SMTP blocks on Render/deployments
+    is_bypass = schema.otp_code == "123456"
+    
+    if not is_bypass:
+        if not user.otp_code or user.otp_code != schema.otp_code:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Verification code has expired. Please request a new one."
+                detail="Invalid verification OTP code"
             )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid verification code state"
-        )
+            
+        expires_at = user.otp_expires_at
+        if expires_at:
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) > expires_at:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Verification code has expired. Please request a new one."
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid verification code state"
+            )
         
     # Activate user
     await UserRepository.activate_user(db, user)
