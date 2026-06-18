@@ -159,10 +159,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     return user
 
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(schema: UserCreate, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def register(schema: UserCreate, db: AsyncSession = Depends(get_db)):
     """Registers a new email/password candidate account (requires verification)."""
     existing_user = await UserRepository.get_by_email(db, schema.email)
     if existing_user:
@@ -177,7 +175,7 @@ async def register(schema: UserCreate, background_tasks: BackgroundTasks, db: As
             otp_code = f"{random.randint(100000, 999999)}"
             otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
             await UserRepository.update_user_otp(db, existing_user, otp_code, otp_expires_at)
-            background_tasks.add_task(send_otp_email, existing_user.email, otp_code)
+            send_otp_email(existing_user.email, otp_code)
             return existing_user
             
         raise HTTPException(
@@ -189,7 +187,7 @@ async def register(schema: UserCreate, background_tasks: BackgroundTasks, db: As
     otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
     
     user = await UserRepository.create_local_user(db, schema, otp_code, otp_expires_at)
-    background_tasks.add_task(send_otp_email, user.email, otp_code)
+    send_otp_email(user.email, otp_code)
     return user
 
 
@@ -261,30 +259,26 @@ async def verify_otp(schema: OTPVerificationRequest, db: AsyncSession = Depends(
             detail="Account is already verified and active. Please login."
         )
         
-    # Allow '123456' as a testing bypass code to bypass SMTP blocks on Render/deployments
-    is_bypass = schema.otp_code == "123456"
-    
-    if not is_bypass:
-        if not user.otp_code or user.otp_code != schema.otp_code:
+    if not user.otp_code or user.otp_code != schema.otp_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification OTP code"
+        )
+        
+    expires_at = user.otp_expires_at
+    if expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid verification OTP code"
+                detail="Verification code has expired. Please request a new one."
             )
-            
-        expires_at = user.otp_expires_at
-        if expires_at:
-            if expires_at.tzinfo is None:
-                expires_at = expires_at.replace(tzinfo=timezone.utc)
-            if datetime.now(timezone.utc) > expires_at:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Verification code has expired. Please request a new one."
-                )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid verification code state"
-            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code state"
+        )
         
     # Activate user
     await UserRepository.activate_user(db, user)
@@ -295,7 +289,7 @@ async def verify_otp(schema: OTPVerificationRequest, db: AsyncSession = Depends(
 
 
 @router.post("/resend-otp")
-async def resend_otp(schema: OTPResendRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def resend_otp(schema: OTPResendRequest, db: AsyncSession = Depends(get_db)):
     """Resends verification OTP code to the inactive user email."""
     user = await UserRepository.get_by_email(db, schema.email)
     if not user or user.auth_provider != "local" or user.is_active:
@@ -308,7 +302,7 @@ async def resend_otp(schema: OTPResendRequest, background_tasks: BackgroundTasks
     otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
     
     await UserRepository.update_user_otp(db, user, otp_code, otp_expires_at)
-    background_tasks.add_task(send_otp_email, user.email, otp_code)
+    send_otp_email(user.email, otp_code)
     return {"message": "A new verification OTP code has been sent to your email."}
 
 
@@ -390,7 +384,7 @@ async def google_callback(payload: GoogleCallbackRequest, db: AsyncSession = Dep
 
 
 @router.post("/forgot-password")
-async def forgot_password(schema: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def forgot_password(schema: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     """Triggers password reset email workflow."""
     user = await UserRepository.get_by_email(db, schema.email)
     
@@ -404,8 +398,13 @@ async def forgot_password(schema: ForgotPasswordRequest, background_tasks: Backg
 
     await UserRepository.update_reset_token(db, user, token, expiration)
     
-    # Send reset mail in background
-    background_tasks.add_task(send_reset_email, user.email, token)
+    # Send reset mail
+    mail_sent = send_reset_email(user.email, token)
+    if not mail_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send password recovery email"
+        )
 
     return {"message": "If this email is registered, a password reset link has been sent."}
 
