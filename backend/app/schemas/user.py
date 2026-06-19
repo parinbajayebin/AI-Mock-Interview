@@ -1,7 +1,6 @@
 import uuid
 import re
 from datetime import datetime
-from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 class UserBase(BaseModel):
@@ -31,30 +30,3 @@ class UserResponse(UserBase):
     class Config:
         # Pydantic v2 configuration to allow parsing from SQLAlchemy models
         from_attributes = True
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
-
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
-
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str = Field(..., min_length=6, description="The new password (minimum 6 characters)")
-
-class GoogleCallbackRequest(BaseModel):
-    id_token: str = Field(..., description="Google ID Token returned from the frontend authentication flow")
-
-class OTPVerificationRequest(BaseModel):
-    email: EmailStr = Field(..., description="Email address to verify")
-    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
-
-class OTPResendRequest(BaseModel):
-    email: EmailStr = Field(..., description="Email address to send new OTP")
-
