@@ -10,19 +10,10 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware
-# Dynamically includes the deployed frontend URL alongside local dev origins
-allowed_origins = [
-    "http://localhost:5173",
-    "http://localhost",
-    "https://localhost",
-]
-# Add the production frontend URL if configured
-if settings.FRONTEND_URL and settings.FRONTEND_URL not in allowed_origins:
-    allowed_origins.append(settings.FRONTEND_URL)
-
+# Allow all origins temporarily for easy deployment and testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
