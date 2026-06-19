@@ -127,6 +127,12 @@ export const AuthProvider = ({ children }) => {
       await updateProfile(firebaseUser, {
         displayName: fullName
       });
+
+      // Get ID token and sync with backend immediately to create the local DB entry
+      const idToken = await firebaseUser.getIdToken(true);
+      await fetch(`${apiBase}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
       
       // Send verification email
       await sendEmailVerification(firebaseUser);
