@@ -10,6 +10,8 @@ from app.services.resume_service import upload_resume_to_storage, extract_text_f
 from app.auth.routes import get_current_user
 from app.models.user import User
 
+from app.services.ai_service import analyze_resume_text
+
 router = APIRouter(prefix="/resumes", tags=["Resumes"])
 
 @router.post("/upload", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED)
@@ -32,18 +34,21 @@ async def upload_resume(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse PDF text: {str(e)}")
 
-    # 3. Create database entry
+    # 3. Analyze text using Gemini 3.5 Flash
+    analysis = await analyze_resume_text(raw_text)
+
+    # 4. Create database entry with parsed AI features
     repo = ResumeRepository(db)
     resume = await repo.create(
         user_id=current_user.id,
         file_name=file.filename,
         file_path=file_path,
-        raw_text=raw_text
+        raw_text=raw_text,
+        skills=analysis.get("skills", []),
+        experience_summary=analysis.get("experience_summary", ""),
+        parsed_metadata=analysis.get("parsed_metadata", {})
     )
 
-    # Return base response (Gemini extraction can be handled asynchronously or later)
-    # The API spec says it should return skills and experience_summary, 
-    # but for Phase 2 we might just return empty if Gemini is Phase 3
     return resume
 
 @router.get("", response_model=list[ResumeResponse])

@@ -7,12 +7,24 @@ class ResumeRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, user_id: uuid.UUID, file_name: str, file_path: str, raw_text: str) -> Resume:
+    async def create(
+        self, 
+        user_id: uuid.UUID, 
+        file_name: str, 
+        file_path: str, 
+        raw_text: str,
+        skills: list[str] = None,
+        experience_summary: str = None,
+        parsed_metadata: dict = None
+    ) -> Resume:
         resume = Resume(
             user_id=user_id,
             file_name=file_name,
             file_path=file_path,
-            raw_text=raw_text
+            raw_text=raw_text,
+            skills=skills or [],
+            experience_summary=experience_summary,
+            parsed_metadata=parsed_metadata or {}
         )
         self.session.add(resume)
         await self.session.commit()
