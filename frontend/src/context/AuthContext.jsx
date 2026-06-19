@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+
   // Sync token to API requests automatically
   const apiFetch = async (url, options = {}) => {
     const headers = {
@@ -30,7 +32,8 @@ export const AuthProvider = ({ children }) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const res = await fetch(url, { ...options, headers });
+    const targetUrl = url.startsWith('/') ? `${apiBase}${url}` : url;
+    const res = await fetch(targetUrl, { ...options, headers });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({ detail: 'Server communication error' }));
       throw new Error(errData.detail || 'Request failed');
@@ -52,7 +55,7 @@ export const AuthProvider = ({ children }) => {
       setToken(idToken);
       
       // Fetch user profile from backend to ensure syncing with Supabase DB
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch(`${apiBase}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${idToken}` }
       });
       
