@@ -26,21 +26,12 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: Optional[str] = Field(default=None)
     GOOGLE_CLIENT_SECRET: Optional[str] = Field(default=None)
 
-    # Resend Email Settings
+    # Resend Email API Settings (https://resend.com)
     RESEND_API_KEY: Optional[str] = Field(default=None)
     RESEND_SENDER: str = Field(default="onboarding@resend.dev")
 
-    # SMTP Settings
-    SMTP_HOST: str = Field(default="smtp.gmail.com")
-    SMTP_PORT: int = Field(default=465)
-    SMTP_USERNAME: Optional[str] = Field(default=None)
-    SMTP_EMAIL: Optional[str] = Field(default=None)
-    SMTP_PASSWORD: Optional[str] = Field(default=None)
-    SMTP_SENDER_EMAIL: Optional[str] = Field(default=None)
-
-    @property
-    def smtp_username(self) -> Optional[str]:
-        return self.SMTP_USERNAME or self.SMTP_EMAIL
+    # Frontend URL (used for password reset links, CORS, etc.)
+    FRONTEND_URL: str = Field(default="http://localhost:5173")
 
     # Supabase Settings
     SUPABASE_URL: Optional[str] = Field(default=None)

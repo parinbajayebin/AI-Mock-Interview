@@ -1,10 +1,7 @@
 import uuid
-import smtplib
 import httpx
 import random
 from datetime import datetime, timedelta, timezone
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
@@ -35,9 +32,55 @@ from app.schemas.user import (
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# Helper function to send OTP email
+
+# ---------------------------------------------------------------------------
+# Email helpers — Resend HTTP API only (no SMTP)
+# ---------------------------------------------------------------------------
+
+def _send_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Send an email via the Resend HTTP API. Returns True on success."""
+    if not settings.RESEND_API_KEY:
+        print(f"\n[WARN] RESEND_API_KEY not set. Email to {to_email} was NOT sent.")
+        print(f"       Subject: {subject}\n")
+        return False
+
+    try:
+        headers = {
+            "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        sender = settings.RESEND_SENDER
+        from_field = (
+            "AI Mock Interview <onboarding@resend.dev>"
+            if sender == "onboarding@resend.dev"
+            else f"AI Mock Interview <{sender}>"
+        )
+        payload = {
+            "from": from_field,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body
+        }
+        with httpx.Client() as client:
+            r = client.post(
+                "https://api.resend.com/emails",
+                json=payload,
+                headers=headers,
+                timeout=10.0
+            )
+            if r.status_code in (200, 201):
+                return True
+            else:
+                print(f"[ERROR] Resend API {r.status_code}: {r.text}")
+                return False
+    except Exception as e:
+        print(f"[ERROR] Resend API exception: {e}")
+        return False
+
+
 def send_otp_email(to_email: str, otp_code: str) -> bool:
-    body = f"""
+    """Send a 6-digit OTP verification email."""
+    html = f"""
     <html>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
@@ -54,72 +97,13 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         </body>
     </html>
     """
+    return _send_email(to_email, "Email Verification OTP - AI Mock Interview", html)
 
-    if settings.RESEND_API_KEY:
-        try:
-            import httpx
-            headers = {
-                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            sender = settings.RESEND_SENDER
-            sender_name = "AI Mock Interview <onboarding@resend.dev>" if sender == "onboarding@resend.dev" else f"AI Mock Interview <{sender}>"
-            
-            payload = {
-                "from": sender_name,
-                "to": [to_email],
-                "subject": "Email Verification OTP - AI Mock Interview",
-                "html": body
-            }
-            with httpx.Client() as client:
-                r = client.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
-                if r.status_code in (200, 201):
-                    return True
-                else:
-                    print(f"[ERROR] Resend API error: {r.status_code} - {r.text}")
-        except Exception as e:
-            print(f"[ERROR] Failed to send email via Resend API: {str(e)}")
 
-    # Fallback log print in case SMTP is not configured
-    if not settings.smtp_username or not settings.SMTP_PASSWORD:
-        print("\n=== [SMTP NOT CONFIGURED] Fallback Verification OTP ===")
-        print(f"To Email: {to_email}")
-        print(f"OTP Code: {otp_code}")
-        print("=======================================================\n")
-        return True
-
-    try:
-        sender_email = settings.SMTP_SENDER_EMAIL or settings.smtp_username
-        msg = MIMEMultipart()
-        msg['From'] = f"AI Mock Interview <{sender_email}>"
-        msg['To'] = to_email
-        msg['Subject'] = "Email Verification OTP - AI Mock Interview"
-        msg.attach(MIMEText(body, 'html'))
-
-        if settings.SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
-        else:
-            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
-            server.starttls()
-
-        with server:
-            # Strip spaces from App Passwords if present
-            smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
-            server.login(settings.smtp_username, smtp_pass)
-            server.sendmail(sender_email, to_email, msg.as_string())
-        return True
-    except Exception as e:
-        print(f"\n[ERROR] Failed to send OTP email via SMTP: {str(e)}")
-        print(f"Fallback OTP Code: {otp_code}\n")
-        return False
-
-# Setup OAuth2 password scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
-
-# Helper function to send reset email
 def send_reset_email(to_email: str, reset_token: str) -> bool:
-    reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
-    body = f"""
+    """Send a password-reset link email."""
+    reset_link = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+    html = f"""
     <html>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; padding: 20px; background-color: #f3f4f6;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
@@ -127,7 +111,7 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
                 <p>Hello,</p>
                 <p>We received a request to reset the password for your account. Click the button below to set a new password. This link is valid for <strong>15 minutes</strong>:</p>
                 <div style="margin: 30px 0; text-align: center;">
-                    <a href="{reset_link}" style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background-color 0.2s;">Reset Password</a>
+                    <a href="{reset_link}" style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
                 </div>
                 <p>If you did not request this, you can safely ignore this email.</p>
                 <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;" />
@@ -136,64 +120,15 @@ def send_reset_email(to_email: str, reset_token: str) -> bool:
         </body>
     </html>
     """
+    return _send_email(to_email, "Reset Your Password - AI Mock Interview", html)
 
-    if settings.RESEND_API_KEY:
-        try:
-            import httpx
-            headers = {
-                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            sender = settings.RESEND_SENDER
-            sender_name = "AI Mock Interview <onboarding@resend.dev>" if sender == "onboarding@resend.dev" else f"AI Mock Interview <{sender}>"
-            
-            payload = {
-                "from": sender_name,
-                "to": [to_email],
-                "subject": "Reset Your Password - AI Mock Interview",
-                "html": body
-            }
-            with httpx.Client() as client:
-                r = client.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
-                if r.status_code in (200, 201):
-                    return True
-                else:
-                    print(f"[ERROR] Resend API error: {r.status_code} - {r.text}")
-        except Exception as e:
-            print(f"[ERROR] Failed to send email via Resend API: {str(e)}")
 
-    # Fallback log print in case SMTP is not configured
-    if not settings.smtp_username or not settings.SMTP_PASSWORD:
-        print("\n=== [SMTP NOT CONFIGURED] Fallback Password Reset URL ===")
-        print(f"To Email: {to_email}")
-        print(f"Reset Link: {reset_link}")
-        print("=========================================================\n")
-        return True
+# ---------------------------------------------------------------------------
+# Auth helpers
+# ---------------------------------------------------------------------------
 
-    try:
-        sender_email = settings.SMTP_SENDER_EMAIL or settings.smtp_username
-        msg = MIMEMultipart()
-        msg['From'] = f"AI Mock Interview <{sender_email}>"
-        msg['To'] = to_email
-        msg['Subject'] = "Reset Your Password - AI Mock Interview"
-        msg.attach(MIMEText(body, 'html'))
-
-        if settings.SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT)
-        else:
-            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
-            server.starttls()
-
-        with server:
-            # Strip spaces from App Passwords if present
-            smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
-            server.login(settings.smtp_username, smtp_pass)
-            server.sendmail(sender_email, to_email, msg.as_string())
-        return True
-    except Exception as e:
-        print(f"\n[ERROR] Failed to send email via SMTP: {str(e)}")
-        print(f"Fallback Reset Link: {reset_link}\n")
-        return False
+# Setup OAuth2 password scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> UserResponse:
@@ -217,6 +152,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         raise credentials_exception
     return user
 
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(schema: UserCreate, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
@@ -369,85 +308,6 @@ async def resend_otp(schema: OTPResendRequest, background_tasks: BackgroundTasks
 async def get_google_config():
     """Exposes Google Client ID to frontend dynamically."""
     return {"client_id": settings.GOOGLE_CLIENT_ID}
-
-
-@router.get("/test-smtp")
-async def test_smtp(email: str):
-    """Temporary test endpoint to diagnose SMTP or Resend API failures on Render."""
-    info = {}
-    try:
-        if settings.RESEND_API_KEY:
-            info = {
-                "provider": "Resend",
-                "api_key_configured": True,
-                "sender": settings.RESEND_SENDER
-            }
-            import httpx
-            headers = {
-                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            sender_name = "AI Mock Interview Test <onboarding@resend.dev>" if settings.RESEND_SENDER == "onboarding@resend.dev" else f"AI Mock Interview Test <{settings.RESEND_SENDER}>"
-            
-            payload = {
-                "from": sender_name,
-                "to": [email],
-                "subject": "Resend API Connection Test",
-                "html": "<p>This is a diagnostic test email via Resend API.</p>"
-            }
-            with httpx.Client() as client:
-                r = client.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
-                if r.status_code in (200, 201):
-                    return {"status": "success", "message": "Email sent successfully via Resend API!", "info": info, "response": r.json()}
-                else:
-                    return {"status": "error", "message": f"Resend API error: {r.status_code}", "response": r.text, "info": info}
-
-        smtp_user = settings.smtp_username
-        smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
-        
-        info = {
-            "provider": "SMTP",
-            "host": settings.SMTP_HOST,
-            "port": settings.SMTP_PORT,
-            "username_configured": bool(smtp_user),
-            "username": smtp_user,
-            "password_configured": bool(smtp_pass),
-            "sender_email": settings.SMTP_SENDER_EMAIL or smtp_user
-        }
-        
-        if not smtp_user or not smtp_pass:
-            return {"status": "error", "message": "SMTP credentials not configured in settings", "info": info}
-            
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        
-        msg = MIMEMultipart()
-        msg['From'] = f"AI Mock Interview Test <{info['sender_email']}>"
-        msg['To'] = email
-        msg['Subject'] = "SMTP Connection Test"
-        msg.attach(MIMEText("This is a diagnostic test email via SMTP.", 'plain'))
-        
-        if settings.SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
-        else:
-            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
-            server.starttls()
-            
-        with server:
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(info['sender_email'], email, msg.as_string())
-            
-        return {"status": "success", "message": "Email sent successfully!", "info": info}
-    except Exception as e:
-        import traceback
-        return {
-            "status": "error",
-            "message": str(e),
-            "exception_type": type(e).__name__,
-            "traceback": traceback.format_exc(),
-            "info": info
-        }
 
 
 @router.post("/google/callback", response_model=Token)

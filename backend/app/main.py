@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.auth.routes import router as auth_router
+from app.core.config import settings
 
 app = FastAPI(
     title="AI-Powered Mock Interview Platform API",
@@ -9,10 +10,19 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware
-# Allows the React frontend (running locally on port 5173 or in Docker on port 80) to query endpoints
+# Dynamically includes the deployed frontend URL alongside local dev origins
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost",
+    "https://localhost",
+]
+# Add the production frontend URL if configured
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in allowed_origins:
+    allowed_origins.append(settings.FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost", "https://localhost"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
