@@ -14,11 +14,6 @@ class Settings(BaseSettings):
 
     # Database Settings
     DATABASE_URL: str = Field(default="postgresql+asyncpg://postgres:postgres_secure_pass@localhost:5432/ai_mock_interview")
-    
-    # Security/Auth Settings (JWT settings kept for legacy fallback if needed)
-    JWT_SECRET_KEY: str = Field(default="super_secret_jwt_sign_key_change_me_in_production")
-    JWT_ALGORITHM: str = Field(default="HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
 
     # Gemini Settings
     GEMINI_API_KEY: Optional[str] = Field(default=None)
