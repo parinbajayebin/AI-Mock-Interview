@@ -41,7 +41,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
                 supabase_auth_url,
                 headers={
                     "Authorization": f"Bearer {token}",
-                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY or "" # Fallback if not configured
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY or settings.VITE_SUPABASE_ANON_KEY or ""
                 }
             )
             

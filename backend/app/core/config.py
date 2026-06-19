@@ -37,5 +37,6 @@ class Settings(BaseSettings):
     SUPABASE_URL: Optional[str] = Field(default=None)
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None)
     SUPABASE_JWT_SECRET: Optional[str] = Field(default=None)
+    VITE_SUPABASE_ANON_KEY: Optional[str] = Field(default=None)
 
 settings = Settings()
