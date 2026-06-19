@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-  const { login, handleGoogleCallback, logout } = useAuth();
+  const { login, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -17,69 +17,6 @@ export default function Login() {
   useEffect(() => {
     logout();
   }, []);
-
-  // Initialize Google Sign-In Button
-  useEffect(() => {
-    let checkInterval;
-    
-    const initializeGoogleAuth = async () => {
-      try {
-        const res = await fetch('/api/auth/google/config');
-        const data = await res.json();
-        
-        if (!data.client_id) {
-          console.warn("Google Client ID not configured in backend");
-          return;
-        }
-
-        // Poll every 100ms for window.google to be loaded by index.html script tag
-        checkInterval = setInterval(() => {
-          if (window.google) {
-            clearInterval(checkInterval);
-            
-            window.google.accounts.id.initialize({
-              client_id: data.client_id,
-              callback: handleGoogleCredentialResponse,
-              auto_select: false
-            });
-            
-            window.google.accounts.id.renderButton(
-              document.getElementById("google-signin-btn"),
-              { 
-                theme: "filled_dark", 
-                size: "large", 
-                width: "100%", 
-                text: "signin_with",
-                shape: "rectangular"
-              }
-            );
-          }
-        }, 100);
-      } catch (err) {
-        console.error("Google Auth initialization error:", err);
-      }
-    };
-    
-    initializeGoogleAuth();
-    
-    return () => {
-      if (checkInterval) clearInterval(checkInterval);
-    };
-  }, []);
-
-  const handleGoogleCredentialResponse = async (response) => {
-    try {
-      setIsSubmitLoading(true);
-      setAuthError('');
-      // Send verified google credential JWT to backend
-      await handleGoogleCallback(response.credential);
-      navigate('/');
-    } catch (err) {
-      setAuthError(err.message || 'Google verification failed.');
-    } finally {
-      setIsSubmitLoading(false);
-    }
-  };
 
   const handleStandardSubmit = async (e) => {
     e.preventDefault();
@@ -94,7 +31,28 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setAuthError(err.message || 'Incorrect email or password.');
+      let customError = 'Incorrect email or password.';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        customError = 'Invalid email address or password.';
+      } else if (err.code === 'auth/too-many-requests') {
+        customError = 'Account temporarily locked due to too many failed attempts. Try again later.';
+      } else if (err.message) {
+        customError = err.message;
+      }
+      setAuthError(customError);
+    } finally {
+      setIsSubmitLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSubmitLoading(true);
+      setAuthError('');
+      await loginWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setAuthError(err.message || 'Google verification failed.');
     } finally {
       setIsSubmitLoading(false);
     }
@@ -195,10 +153,17 @@ export default function Login() {
           </span>
         </div>
 
-        {/* Google OAuth Login Button Target */}
-        <div className="w-full flex justify-center mb-6">
-          <div id="google-signin-btn" className="flex justify-center w-full min-h-[44px]"></div>
-        </div>
+        {/* Custom Google login button */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={isSubmitLoading}
+          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 py-2.5 rounded-lg text-sm font-semibold text-slate-200 transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.626 5.626 0 0 1 8.35 13a5.626 5.626 0 0 1 5.64-5.6c1.478 0 2.822.56 3.84 1.48L20.88 5.83A9.554 9.554 0 0 0 13.99 3c-5.26 0-9.64 4.01-9.64 9s4.38 9 9.64 9c5.06 0 9.22-3.8 9.22-9 0-.61-.06-1.18-.17-1.715H12.24z"/>
+          </svg>
+          <span>Sign In with Google</span>
+        </button>
 
         <p className="text-center text-slate-400 text-sm mt-6">
           Don't have an account?{' '}

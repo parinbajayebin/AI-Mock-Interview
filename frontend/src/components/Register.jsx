@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, User, AlertTriangle, CheckCircle, ArrowLeft, ArrowRight, ShieldAlert, KeyRound } from 'lucide-react';
+import { Lock, Mail, User, AlertTriangle, CheckCircle, ArrowLeft, ArrowRight, KeyRound } from 'lucide-react';
 
 export default function Register() {
-  const { register, verifyOtp, resendOtp, handleGoogleCallback, logout } = useAuth();
+  const { register, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Wizard state: 1 = Signup Form, 2 = OTP Verification
+  // Wizard state: 1 = Signup Form, 2 = Verification Message
   const [step, setStep] = useState(1);
 
   // Form inputs
@@ -15,96 +15,16 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otpCode, setOtpCode] = useState('');
 
   // UI feedback & loaders
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Resend OTP countdown timer
-  const [resendTimer, setResendTimer] = useState(0);
-
   // Clear stale session on mount
   useEffect(() => {
     logout();
   }, []);
-
-  // Initialize Google Sign-in for Signup
-  useEffect(() => {
-    if (step !== 1) return;
-    let checkInterval;
-
-    const initializeGoogleAuth = async () => {
-      try {
-        const res = await fetch('/api/auth/google/config');
-        const data = await res.json();
-
-        if (!data.client_id) {
-          console.warn("Google Client ID not configured in backend");
-          return;
-        }
-
-        // Poll every 100ms for window.google to be loaded by index.html script tag
-        checkInterval = setInterval(() => {
-          if (window.google) {
-            clearInterval(checkInterval);
-
-            window.google.accounts.id.initialize({
-              client_id: data.client_id,
-              callback: handleGoogleCredentialResponse,
-              auto_select: false
-            });
-
-            const btnEl = document.getElementById("google-signup-btn");
-            if (btnEl) {
-              window.google.accounts.id.renderButton(
-                btnEl,
-                {
-                  theme: "filled_dark",
-                  size: "large",
-                  width: "100%",
-                  text: "signup_with",
-                  shape: "rectangular"
-                }
-              );
-            }
-          }
-        }, 100);
-      } catch (err) {
-        console.error("Google Auth signup initialization error:", err);
-      }
-    };
-
-    initializeGoogleAuth();
-    return () => {
-      if (checkInterval) clearInterval(checkInterval);
-    };
-  }, [step]);
-
-  // Handle countdown timer for OTP resend
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const interval = setInterval(() => {
-      setResendTimer((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [resendTimer]);
-
-  const handleGoogleCredentialResponse = async (response) => {
-    try {
-      setIsLoading(true);
-      setErrorMsg('');
-      setSuccessMsg('');
-      // Sign up and log in directly using Google credentials
-      await handleGoogleCallback(response.credential);
-      navigate('/');
-    } catch (err) {
-      setErrorMsg(err.message || 'Google registration failed.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Evaluate Password Strength
   const evaluatePasswordStrength = (pwd) => {
@@ -157,52 +77,31 @@ export default function Register() {
     try {
       setIsLoading(true);
       await register(fullName, email, password);
-      setSuccessMsg('Legitimate account initialized! An OTP code has been dispatched to your email.');
-      setResendTimer(60); // Initialize 60s countdown for resend
-      setStep(2); // Advance to OTP verification wizard step
+      setSuccessMsg('Account created successfully! A verification link has been sent to your email.');
+      setStep(2); // Advance to email verification instructions screen
     } catch (err) {
-      setErrorMsg(err.message || 'Registration failed. Please check your credentials.');
+      let customError = 'Registration failed. Please check your credentials.';
+      if (err.code === 'auth/email-already-in-use') {
+        customError = 'An account with this email address already exists.';
+      } else if (err.code === 'auth/invalid-email') {
+        customError = 'Invalid email address format.';
+      } else if (err.message) {
+        customError = err.message;
+      }
+      setErrorMsg(customError);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOtpVerifySubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    if (otpCode.length !== 6) {
-      setErrorMsg('Please enter a 6-digit verification code');
-      return;
-    }
-
+  const handleGoogleSignup = async () => {
     try {
       setIsLoading(true);
-      await verifyOtp(email, otpCode);
-      setSuccessMsg('Account verified and logged in successfully!');
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
+      setErrorMsg('');
+      await loginWithGoogle();
+      navigate('/');
     } catch (err) {
-      setErrorMsg(err.message || 'Verification failed. Incorrect or expired OTP code.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (resendTimer > 0) return;
-    setErrorMsg('');
-    // Do not clear successMsg immediately to prevent layout shift during brief load state
-
-    try {
-      setIsLoading(true);
-      await resendOtp(email);
-      setSuccessMsg('A new verification OTP code has been sent to your email.');
-      setResendTimer(60);
-    } catch (err) {
-      setErrorMsg(err.message || 'Failed to resend verification code.');
+      setErrorMsg(err.message || 'Google registration failed.');
     } finally {
       setIsLoading(false);
     }
@@ -347,10 +246,17 @@ export default function Register() {
               </span>
             </div>
 
-            {/* Google OAuth signup option */}
-            <div className="w-full flex justify-center mb-4">
-              <div id="google-signup-btn" className="flex justify-center w-full min-h-[44px]"></div>
-            </div>
+            {/* Custom Google Auth button */}
+            <button
+              onClick={handleGoogleSignup}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 py-2.5 rounded-lg text-sm font-semibold text-slate-200 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.626 5.626 0 0 1 8.35 13a5.626 5.626 0 0 1 5.64-5.6c1.478 0 2.822.56 3.84 1.48L20.88 5.83A9.554 9.554 0 0 0 13.99 3c-5.26 0-9.64 4.01-9.64 9s4.38 9 9.64 9c5.06 0 9.22-3.8 9.22-9 0-.61-.06-1.18-.17-1.715H12.24z"/>
+              </svg>
+              <span>Sign Up with Google</span>
+            </button>
 
             <p className="text-center text-slate-400 text-sm mt-6">
               Already have an account?{' '}
@@ -364,7 +270,7 @@ export default function Register() {
           </>
         ) : (
           /* ==============================================================================
-             STEP 2: EMAIL OTP VERIFICATION SCREEN
+             STEP 2: EMAIL VERIFICATION CHECK MESSAGE
              ============================================================================== */
           <>
             <div className="text-center mb-6">
@@ -372,79 +278,31 @@ export default function Register() {
                 <KeyRound className="w-6 h-6" />
               </div>
               <h1 className="text-3xl font-bold font-sans tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
-                Verify Email
+                Verify Your Email
               </h1>
-              <p className="text-slate-400 text-sm mt-2">
-                We sent a 6-digit verification code to <strong>{email}</strong>
+              <p className="text-slate-400 text-sm mt-4 leading-relaxed">
+                We have dispatched a verification link to <strong className="text-slate-200">{email}</strong>.
               </p>
+              <div className="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-sm">
+                Please click the link inside the verification email to activate your account. Once verified, you can sign in below.
+              </div>
             </div>
 
-            {errorMsg && (
-              <div className="mb-5 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-start gap-3">
-                <ShieldAlert className="w-5 h-5 shrink-0 text-red-400" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
+            <div className="flex flex-col gap-3 mt-8">
+              <Link
+                to="/login"
+                className="w-full btn-primary flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm text-center"
+              >
+                Proceed to Login
+              </Link>
 
-            {successMsg && (
-              <div className="mb-5 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-sm flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 shrink-0 text-emerald-400" />
-                <span>{successMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleOtpVerifySubmit} className="space-y-6">
-              <div>
-                <label className="block text-slate-300 text-xs font-semibold uppercase tracking-wider text-center mb-3">
-                  Verification OTP Code
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full text-center text-3xl font-bold tracking-[10px] pl-[10px] py-3 glass-input rounded-xl border border-slate-700 font-mono"
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full btn-primary flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <span className="w-5 h-5 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></span>
-                  ) : (
-                    'Verify and Activate'
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={resendTimer > 0 || isLoading}
-                  className="w-full btn-secondary text-sm flex items-center justify-center gap-2 disabled:opacity-40"
-                >
-                  {resendTimer > 0 ? (
-                    `Resend OTP in ${resendTimer}s`
-                  ) : (
-                    'Resend Verification Code'
-                  )}
-                </button>
-              </div>
-            </form>
-
-            <div className="text-center mt-6">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+                className="inline-flex items-center justify-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors mt-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Change signup details</span>
+                <span>Go back to signup</span>
               </button>
             </div>
           </>

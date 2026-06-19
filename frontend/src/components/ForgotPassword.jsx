@@ -18,9 +18,17 @@ export default function ForgotPassword() {
     try {
       setIsLoading(true);
       await sendForgotPassword(email);
-      setSuccessMsg('Recovery email sent! Please check your inbox and console logs for the reset link.');
+      setSuccessMsg('Password reset link sent! Please check your inbox to configure a new credentials password.');
     } catch (err) {
-      setErrorMsg(err.message || 'Unable to trigger password recovery. Please verify your email.');
+      let customError = 'Unable to trigger password recovery. Please verify your email.';
+      if (err.code === 'auth/user-not-found') {
+        customError = 'No account found with this email address.';
+      } else if (err.code === 'auth/invalid-email') {
+        customError = 'Invalid email address format.';
+      } else if (err.message) {
+        customError = err.message;
+      }
+      setErrorMsg(customError);
     } finally {
       setIsLoading(false);
     }

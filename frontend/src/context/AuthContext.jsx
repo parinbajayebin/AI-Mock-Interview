@@ -1,10 +1,22 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { 
+  auth,
+  googleProvider,
+  signInWithPopup,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  onAuthStateChanged
+} from '../firebase';
+import { updateProfile } from 'firebase/auth';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Sync token to API requests automatically
@@ -14,9 +26,8 @@ export const AuthProvider = ({ children }) => {
       ...options.headers,
     };
     
-    const activeToken = token || localStorage.getItem('token');
-    if (activeToken) {
-      headers['Authorization'] = `Bearer ${activeToken}`;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     
     const res = await fetch(url, { ...options, headers });
@@ -27,98 +38,140 @@ export const AuthProvider = ({ children }) => {
     return res.json();
   };
 
-  // On mount, verify existing JWT token
-  useEffect(() => {
-    const checkUserSession = async () => {
-      const activeToken = localStorage.getItem('token');
-      if (activeToken) {
-        try {
-          const res = await fetch('/api/auth/me', {
-            headers: { 'Authorization': `Bearer ${activeToken}` }
-          });
-          if (res.ok) {
-            const userData = await res.json();
-            setUser(userData);
-            setToken(activeToken);
-          } else {
-            // Local token is expired or invalid
-            logout();
-          }
-        } catch (e) {
-          console.error("Session verification failed:", e);
-          logout();
-        }
-      }
+  // Sync Firebase user state with local database
+  const syncUserSession = async (firebaseUser) => {
+    if (!firebaseUser) {
+      setUser(null);
+      setToken(null);
       setLoading(false);
-    };
-    checkUserSession();
+      return;
+    }
+
+    try {
+      const idToken = await firebaseUser.getIdToken(true);
+      setToken(idToken);
+      
+      // Fetch user profile from backend to ensure syncing with Supabase DB
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+      
+      if (res.ok) {
+        const userData = await res.json();
+        setUser(userData);
+      } else {
+        console.error("Backend user sync failed");
+        setUser(null);
+      }
+    } catch (e) {
+      console.error("Error syncing user session:", e);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Listen to Firebase Auth state change on mount
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // If email is not verified, we do not log them in
+        if (!firebaseUser.emailVerified) {
+          setUser(null);
+          setToken(null);
+          setLoading(false);
+        } else {
+          await syncUserSession(firebaseUser);
+        }
+      } else {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email, password) => {
-    const data = await apiFetch('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    localStorage.setItem('token', data.access_token);
-    setToken(data.access_token);
-    setUser(data.user);
-    return data.user;
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      
+      if (!firebaseUser.emailVerified) {
+        // Automatically send a verification email if they haven't verified yet
+        await sendEmailVerification(firebaseUser);
+        await signOut(auth);
+        throw new Error('Please verify your email address. We have sent a verification link to your inbox.');
+      }
+      
+      await syncUserSession(firebaseUser);
+      return firebaseUser;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   const register = async (fullName, email, password) => {
-    return apiFetch('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ full_name: fullName, email, password }),
-    });
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      
+      // Set display name in Firebase Auth
+      await updateProfile(firebaseUser, {
+        displayName: fullName
+      });
+      
+      // Send verification email
+      await sendEmailVerification(firebaseUser);
+      
+      // Sign out immediately so they must verify and log in
+      await signOut(auth);
+      setLoading(false);
+      return firebaseUser;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
+  const loginWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+      
+      // Google sign-ins are verified by default in Firebase
+      await syncUserSession(firebaseUser);
+      return firebaseUser;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
-  const handleGoogleCallback = async (idToken) => {
-    const data = await apiFetch('/api/auth/google/callback', {
-      method: 'POST',
-      body: JSON.stringify({ id_token: idToken }),
-    });
-    localStorage.setItem('token', data.access_token);
-    setToken(data.access_token);
-    setUser(data.user);
-    return data.user;
-  };
-
-  const verifyOtp = async (email, otpCode) => {
-    const data = await apiFetch('/api/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email, otp_code: otpCode }),
-    });
-    localStorage.setItem('token', data.access_token);
-    setToken(data.access_token);
-    setUser(data.user);
-    return data.user;
-  };
-
-  const resendOtp = async (email) => {
-    return apiFetch('/api/auth/resend-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await signOut(auth);
+      setUser(null);
+      setToken(null);
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const sendForgotPassword = async (email) => {
-    return apiFetch('/api/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  };
-
-  const resetPassword = async (resetToken, newPassword) => {
-    return apiFetch('/api/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify({ token: resetToken, new_password: newPassword }),
-    });
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (
@@ -129,11 +182,8 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout,
-      handleGoogleCallback,
+      loginWithGoogle,
       sendForgotPassword,
-      resetPassword,
-      verifyOtp,
-      resendOtp,
       apiFetch
     }}>
       {children}
