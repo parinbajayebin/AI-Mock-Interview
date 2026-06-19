@@ -28,9 +28,17 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+import ResumeUpload from './components/ResumeUpload';
+import { CheckCircle2 } from 'lucide-react';
+
 // Verification Dashboard to display auth results
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const [resumes, setResumes] = React.useState([]);
+
+  const handleUploadSuccess = (newResume) => {
+    setResumes([newResume, ...resumes]);
+  };
   
   return (
     <div className="min-h-screen bg-animate-gradient flex flex-col">
@@ -50,7 +58,7 @@ const Dashboard = () => {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-12">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-12">
         <div className="glass-panel p-8 rounded-2xl border border-slate-800 mb-8">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
             Hello, {user.full_name}!
@@ -78,39 +86,41 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Roadmap Module Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 bg-slate-900/30 border border-slate-800/50 rounded-xl flex flex-col justify-between">
-            <div>
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4">
-                <LayoutDashboard className="w-4 h-4" />
-              </div>
-              <h3 className="font-semibold text-slate-200">Current Dashboard</h3>
-              <p className="text-slate-500 text-xs mt-2">Active session details and verification statistics.</p>
-            </div>
-            <span className="text-indigo-400 text-xs font-semibold uppercase mt-4">Module 1 (Ready)</span>
+        {/* Action Modules */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Resume Upload Module */}
+          <div className="lg:col-span-1 h-full">
+            <ResumeUpload onUploadSuccess={handleUploadSuccess} />
           </div>
 
-          <div className="p-6 bg-slate-900/30 border border-slate-800/50 rounded-xl flex flex-col justify-between opacity-50">
-            <div>
-              <div className="w-8 h-8 rounded-lg bg-slate-700/20 text-slate-400 flex items-center justify-center mb-4">
-                <PlusCircle className="w-4 h-4" />
+          <div className="lg:col-span-2 space-y-6">
+            {resumes.length > 0 && (
+              <div className="glass-panel p-6 rounded-2xl border border-slate-800">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle2 className="w-5 h-5 text-green-400" />
+                  <h3 className="font-semibold text-slate-200">Recently Uploaded Resumes</h3>
+                </div>
+                <div className="space-y-3">
+                  {resumes.map(r => (
+                    <div key={r.id} className="p-4 bg-slate-900/50 rounded-xl border border-slate-800/80 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-200 truncate">{r.file_name}</span>
+                      <span className="text-xs text-slate-500">Just now</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <h3 className="font-semibold text-slate-400">Resume Upload</h3>
-              <p className="text-slate-500 text-xs mt-2">Upload resume PDF files to trigger AI skillset extraction.</p>
-            </div>
-            <span className="text-slate-500 text-xs font-semibold uppercase mt-4">Module 2 (Pending)</span>
-          </div>
+            )}
 
-          <div className="p-6 bg-slate-900/30 border border-slate-800/50 rounded-xl flex flex-col justify-between opacity-50">
-            <div>
-              <div className="w-8 h-8 rounded-lg bg-slate-700/20 text-slate-400 flex items-center justify-center mb-4">
-                <History className="w-4 h-4" />
+            <div className="p-6 bg-slate-900/30 border border-slate-800/50 rounded-xl flex flex-col justify-between opacity-50 h-full min-h-[200px]">
+              <div>
+                <div className="w-8 h-8 rounded-lg bg-slate-700/20 text-slate-400 flex items-center justify-center mb-4">
+                  <History className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-slate-400">Mock Interviews</h3>
+                <p className="text-slate-500 text-xs mt-2">Run custom sessions and browse history.</p>
               </div>
-              <h3 className="font-semibold text-slate-400">Mock Interviews</h3>
-              <p className="text-slate-500 text-xs mt-2">Run custom sessions and browse history.</p>
+              <span className="text-slate-500 text-xs font-semibold uppercase mt-4">Module 4 (Pending)</span>
             </div>
-            <span className="text-slate-500 text-xs font-semibold uppercase mt-4">Module 4 (Pending)</span>
           </div>
         </div>
       </main>

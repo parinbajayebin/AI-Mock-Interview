@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.auth.routes import router as auth_router
+from app.resume.routes import router as resume_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -22,6 +23,7 @@ app.add_middleware(
 # Include Routers
 # All auth endpoints will be exposed under /api/auth/*
 app.include_router(auth_router, prefix="/api")
+app.include_router(resume_router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 async def root():

@@ -27,17 +27,17 @@ This document tracks the live status of the AI-Powered Mock Interview Platform d
   - [ ] Obtain User Approval for Phase 0 and proceed to Phase 1
 
 ### Pending Tasks
-- [ ] **Phase 1: Module 1 - Authentication**
-  - [ ] Setup FastAPI Backend skeleton and environment variables
-  - [ ] Implement database models (`User`) and migrations
-  - [ ] Set up Password Hashing (bcrypt) and JWT Utilities
-  - [ ] Implement Sign-Up, Login, and Auth Token endpoints
-  - [ ] Build Frontend React Auth forms (Login, Registration) with state management
-- [ ] **Phase 2: Module 2 - Resume Upload**
-  - [ ] Integrate Supabase Client inside backend to handle upload/retrieval
-  - [ ] Implement `Resume` database model
-  - [ ] Create Resume Upload endpoint (PDF file parsing and upload to Supabase bucket)
-  - [ ] Build Frontend drag-and-drop Resume Upload component
+- [x] **Phase 1: Module 1 - Authentication**
+  - [x] Setup FastAPI Backend skeleton and environment variables
+  - [x] Implement database models (`User`) and migrations
+  - [x] Set up Password Hashing (bcrypt) and JWT Utilities
+  - [x] Implement Sign-Up, Login, and Auth Token endpoints
+  - [x] Build Frontend React Auth forms (Login, Registration) with state management
+- [x] **Phase 2: Module 2 - Resume Upload**
+  - [x] Integrate Supabase Client inside backend to handle upload/retrieval
+  - [x] Implement `Resume` database model
+  - [x] Create Resume Upload endpoint (PDF file parsing and upload to Supabase bucket)
+  - [x] Build Frontend drag-and-drop Resume Upload component
 - [ ] **Phase 3: Module 3 - Resume Analysis (Gemini Integration)**
   - [ ] Design and refine Gemini prompt for Resume Parsing (skills, experience, projects) using Gemini 1.5 Flash
   - [ ] Implement backend service to parse PDF text and query Gemini API
