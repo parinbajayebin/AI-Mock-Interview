@@ -24,7 +24,7 @@ class User(Base):
         nullable=False
     )
     
-    # hashed_password VARCHAR(255) (Nullable for Firebase/OAuth users)
+    # hashed_password VARCHAR(255) (Nullable for Supabase/OAuth users)
     hashed_password: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True
@@ -36,14 +36,14 @@ class User(Base):
         nullable=False
     )
     
-    # auth_provider VARCHAR(50) NOT NULL DEFAULT 'firebase'
+    # auth_provider VARCHAR(50) NOT NULL DEFAULT 'supabase'
     auth_provider: Mapped[str] = mapped_column(
         String(50),
-        default="firebase",
+        default="supabase",
         nullable=False
     )
     
-    # provider_id VARCHAR(255) (Nullable, Firebase UID)
+    # provider_id VARCHAR(255) (Nullable, Supabase UID)
     provider_id: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True
