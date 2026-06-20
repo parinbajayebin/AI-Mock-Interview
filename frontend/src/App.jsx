@@ -43,13 +43,17 @@ const ProtectedRoute = ({ children }) => {
 };
 
 import ResumeUpload from './components/ResumeUpload';
+import InterviewConfig from './components/InterviewConfig';
+import { Brain } from 'lucide-react';
 
-// Verification Dashboard to display auth results and resume analysis
+// Verification Dashboard to display auth results, resume analysis, and mock interviews
 const Dashboard = () => {
   const { user, logout, token } = useAuth();
   const [resumes, setResumes] = React.useState([]);
   const [selectedResume, setSelectedResume] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [activeTab, setActiveTab] = React.useState('resumes'); // 'resumes' or 'interview'
+  const [activeInterview, setActiveInterview] = React.useState(null);
 
   React.useEffect(() => {
     const fetchResumes = async () => {
@@ -101,6 +105,7 @@ const Dashboard = () => {
 
       {/* Main Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-12">
+        {/* User Card */}
         <div className="glass-panel p-8 rounded-2xl border border-slate-800 mb-8">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
             Hello, {user.full_name}!
@@ -128,211 +133,305 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Navigation Tabs */}
+        {!activeInterview && (
+          <div className="flex gap-2 border-b border-slate-800 pb-4 mb-8">
+            <button
+              onClick={() => setActiveTab('resumes')}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
+                activeTab === 'resumes'
+                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
+                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Resume Analytics</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('interview')}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
+                activeTab === 'interview'
+                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
+                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Brain className="w-3.5 h-3.5" />
+              <span>Interview Prep</span>
+            </button>
+          </div>
+        )}
+
         {/* Action Modules */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Upload & List (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            <ResumeUpload onUploadSuccess={handleUploadSuccess} />
-            
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-              <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-violet-400" />
-                <span>Your Resumes</span>
-              </h3>
+        {activeInterview ? (
+          <div className="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-400 animate-pulse" />
+                <h2 className="text-xl font-bold text-slate-100">
+                  Active Mock Interview: {activeInterview.role} ({activeInterview.difficulty})
+                </h2>
+              </div>
+              <button 
+                onClick={() => setActiveInterview(null)} 
+                className="btn-secondary py-1.5 px-3 text-xs"
+              >
+                Quit Session
+              </button>
+            </div>
+
+            <div className="p-4 bg-violet-950/20 border border-violet-500/20 text-violet-300 rounded-xl text-xs flex items-center gap-3">
+              <Sparkles className="w-4 h-4 shrink-0 text-violet-400 animate-pulse" />
+              <p>
+                <strong>Phase 4 Complete:</strong> Your customized mock interview questions have been generated and stored in the database.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-200 text-sm">Generated Questions:</h3>
+              <div className="space-y-3">
+                {activeInterview.questions.map((q, idx) => (
+                  <div key={q.id} className="p-4 bg-slate-900/30 border border-slate-800 rounded-xl space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-violet-400">
+                      Question {idx + 1}
+                    </p>
+                    <p className="text-sm text-slate-200 font-medium">
+                      {q.question_text}
+                    </p>
+                    {q.expected_skills && q.expected_skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {q.expected_skills.map((skill, sIdx) => (
+                          <span key={sIdx} className="px-2 py-0.5 bg-slate-800 text-[10px] text-slate-400 rounded-md">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-900/30 border border-slate-850 rounded-xl text-center space-y-3">
+              <Brain className="w-10 h-10 text-slate-600 mx-auto" />
+              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-normal">
+                Phase 5 will implement the interactive voice/text answer submission environment to record and grade your answers.
+              </p>
+            </div>
+          </div>
+        ) : activeTab === 'resumes' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column: Upload & List (5 cols) */}
+            <div className="lg:col-span-5 space-y-6">
+              <ResumeUpload onUploadSuccess={handleUploadSuccess} />
               
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-                </div>
-              ) : resumes.length === 0 ? (
-                <p className="text-slate-500 text-xs text-center py-6">No resumes uploaded yet.</p>
-              ) : (
-                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                  {resumes.map(r => {
-                    const isSelected = selectedResume?.id === r.id;
-                    return (
-                      <button
-                        key={r.id}
-                        onClick={() => setSelectedResume(r)}
-                        className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col gap-1 ${
-                          isSelected
-                            ? 'bg-violet-600/10 border-violet-500/50 shadow-indigo-500/5'
-                            : 'bg-slate-900/30 border-slate-800/80 hover:bg-slate-900/50 hover:border-slate-700'
-                        }`}
-                      >
-                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? 'text-violet-400' : 'text-slate-500'}`}>
-                          {new Date(r.uploaded_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
+              <div className="glass-panel p-6 rounded-2xl border border-slate-800">
+                <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-violet-400" />
+                  <span>Your Resumes</span>
+                </h3>
+                
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                  </div>
+                ) : resumes.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-6">No resumes uploaded yet.</p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    {resumes.map(r => {
+                      const isSelected = selectedResume?.id === r.id;
+                      return (
+                        <button
+                          key={r.id}
+                          onClick={() => setSelectedResume(r)}
+                          className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col gap-1 ${
+                            isSelected
+                              ? 'bg-violet-600/10 border-violet-500/50 shadow-indigo-500/5'
+                              : 'bg-slate-900/30 border-slate-800/80 hover:bg-slate-900/50 hover:border-slate-700'
+                          }`}
+                        >
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? 'text-violet-400' : 'text-slate-500'}`}>
+                            {new Date(r.uploaded_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
+                          </span>
+                          <span className="text-sm font-medium text-slate-200 truncate w-full">{r.file_name}</span>
+                          {r.skills && r.skills.length > 0 && (
+                            <span className="text-[10px] text-slate-500 truncate w-full">
+                              {r.skills.length} skills extracted
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: AI Analysis details (7 cols) */}
+            <div className="lg:col-span-7">
+              {selectedResume ? (
+                <div className="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
+                  {/* Header */}
+                  <div className="border-b border-slate-800/80 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-green-500/10 border border-green-500/20 text-green-400 rounded-full">
+                          AI Parsed
                         </span>
-                        <span className="text-sm font-medium text-slate-200 truncate w-full">{r.file_name}</span>
-                        {r.skills && r.skills.length > 0 && (
-                          <span className="text-[10px] text-slate-500 truncate w-full">
-                            {r.skills.length} skills extracted
+                        {selectedResume.parsed_metadata?.experience_years !== undefined && (
+                          <span className="px-2 py-0.5 text-[10px] font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full">
+                            {selectedResume.parsed_metadata.experience_years} Years Exp
                           </span>
                         )}
-                      </button>
-                    );
-                  })}
+                      </div>
+                      <h2 className="text-xl font-bold text-slate-100 truncate max-w-[320px]">{selectedResume.file_name}</h2>
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  {selectedResume.experience_summary && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Career Summary
+                      </h4>
+                      <div className="p-4 bg-slate-900/40 border border-slate-800 rounded-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-3 opacity-5">
+                          <Sparkles className="w-12 h-12 text-violet-400" />
+                        </div>
+                        <p className="text-sm text-slate-300 leading-relaxed relative z-10">
+                          {selectedResume.experience_summary}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Skills */}
+                  {selectedResume.skills && selectedResume.skills.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Key Skills ({selectedResume.skills.length})
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedResume.skills.map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 bg-violet-600/10 border border-violet-500/20 text-violet-300 rounded-full text-xs font-medium hover:border-violet-500/40 transition-colors"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Education and Contact Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-800/80 pt-6">
+                    {/* Education & Certs */}
+                    <div className="space-y-4">
+                      {selectedResume.parsed_metadata?.education && selectedResume.parsed_metadata.education.length > 0 ? (
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Education
+                          </h4>
+                          <div className="space-y-2">
+                            {selectedResume.parsed_metadata.education.map((edu, idx) => (
+                              <div key={idx} className="text-xs">
+                                <p className="font-semibold text-slate-300">
+                                  {edu.degree} {edu.field_of_study ? `in ${edu.field_of_study}` : ''}
+                                </p>
+                                <p className="text-slate-500">
+                                  {edu.school} {edu.graduation_year ? `(${edu.graduation_year})` : ''}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {selectedResume.parsed_metadata?.certifications && selectedResume.parsed_metadata.certifications.length > 0 ? (
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Certifications
+                          </h4>
+                          <ul className="list-disc list-inside text-xs text-slate-400 space-y-1">
+                            {selectedResume.parsed_metadata.certifications.map((cert, idx) => (
+                              <li key={idx}>{cert}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Contact Info */}
+                    {selectedResume.parsed_metadata?.contact_info && (
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          Contact & Links
+                        </h4>
+                        <div className="space-y-2 text-xs">
+                          {selectedResume.parsed_metadata.contact_info.email && (
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <Mail className="w-3.5 h-3.5 text-violet-400" />
+                              <span>{selectedResume.parsed_metadata.contact_info.email}</span>
+                            </div>
+                          )}
+                          {selectedResume.parsed_metadata.contact_info.phone && (
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <Phone className="w-3.5 h-3.5 text-violet-400" />
+                              <span>{selectedResume.parsed_metadata.contact_info.phone}</span>
+                            </div>
+                          )}
+                          {selectedResume.parsed_metadata.contact_info.linkedin && (
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <Linkedin className="w-3.5 h-3.5 text-violet-400" />
+                              <a
+                                href={selectedResume.parsed_metadata.contact_info.linkedin.startsWith('http') ? selectedResume.parsed_metadata.contact_info.linkedin : `https://${selectedResume.parsed_metadata.contact_info.linkedin}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:text-violet-300 underline transition-colors"
+                              >
+                                LinkedIn
+                              </a>
+                            </div>
+                          )}
+                          {selectedResume.parsed_metadata.contact_info.website && (
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <Globe className="w-3.5 h-3.5 text-violet-400" />
+                              <a
+                                href={selectedResume.parsed_metadata.contact_info.website.startsWith('http') ? selectedResume.parsed_metadata.contact_info.website : `https://${selectedResume.parsed_metadata.contact_info.website}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:text-violet-300 underline transition-colors"
+                              >
+                                Portfolio Website
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="glass-panel p-8 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center h-[350px] opacity-75">
+                  <FileText className="w-16 h-16 text-slate-700 mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-400">No Resume Selected</h3>
+                  <p className="text-xs text-slate-500 max-w-[280px] mt-2">
+                    Upload a PDF resume on the left or select an existing one to view its AI skillset analysis and metadata.
+                  </p>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Right Column: AI Analysis details (7 cols) */}
-          <div className="lg:col-span-7">
-            {selectedResume ? (
-              <div className="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
-                {/* Header */}
-                <div className="border-b border-slate-800/80 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 text-[10px] font-semibold bg-green-500/10 border border-green-500/20 text-green-400 rounded-full">
-                        AI Parsed
-                      </span>
-                      {selectedResume.parsed_metadata?.experience_years !== undefined && (
-                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full">
-                          {selectedResume.parsed_metadata.experience_years} Years Exp
-                        </span>
-                      )}
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-100 truncate max-w-[320px]">{selectedResume.file_name}</h2>
-                  </div>
-                </div>
-
-                {/* Summary */}
-                {selectedResume.experience_summary && (
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Career Summary
-                    </h4>
-                    <div className="p-4 bg-slate-900/40 border border-slate-800 rounded-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-3 opacity-5">
-                        <Sparkles className="w-12 h-12 text-violet-400" />
-                      </div>
-                      <p className="text-sm text-slate-300 leading-relaxed relative z-10">
-                        {selectedResume.experience_summary}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Skills */}
-                {selectedResume.skills && selectedResume.skills.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Key Skills ({selectedResume.skills.length})
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedResume.skills.map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1 bg-violet-600/10 border border-violet-500/20 text-violet-300 rounded-full text-xs font-medium hover:border-violet-500/40 transition-colors"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Education and Contact Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-800/80 pt-6">
-                  {/* Education & Certs */}
-                  <div className="space-y-4">
-                    {selectedResume.parsed_metadata?.education && selectedResume.parsed_metadata.education.length > 0 ? (
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                          Education
-                        </h4>
-                        <div className="space-y-2">
-                          {selectedResume.parsed_metadata.education.map((edu, idx) => (
-                            <div key={idx} className="text-xs">
-                              <p className="font-semibold text-slate-300">
-                                {edu.degree} {edu.field_of_study ? `in ${edu.field_of_study}` : ''}
-                              </p>
-                              <p className="text-slate-500">
-                                {edu.school} {edu.graduation_year ? `(${edu.graduation_year})` : ''}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {selectedResume.parsed_metadata?.certifications && selectedResume.parsed_metadata.certifications.length > 0 ? (
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                          Certifications
-                        </h4>
-                        <ul className="list-disc list-inside text-xs text-slate-400 space-y-1">
-                          {selectedResume.parsed_metadata.certifications.map((cert, idx) => (
-                            <li key={idx}>{cert}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {/* Contact Info */}
-                  {selectedResume.parsed_metadata?.contact_info && (
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Contact & Links
-                      </h4>
-                      <div className="space-y-2 text-xs">
-                        {selectedResume.parsed_metadata.contact_info.email && (
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Mail className="w-3.5 h-3.5 text-violet-400" />
-                            <span>{selectedResume.parsed_metadata.contact_info.email}</span>
-                          </div>
-                        )}
-                        {selectedResume.parsed_metadata.contact_info.phone && (
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Phone className="w-3.5 h-3.5 text-violet-400" />
-                            <span>{selectedResume.parsed_metadata.contact_info.phone}</span>
-                          </div>
-                        )}
-                        {selectedResume.parsed_metadata.contact_info.linkedin && (
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Linkedin className="w-3.5 h-3.5 text-violet-400" />
-                            <a
-                              href={selectedResume.parsed_metadata.contact_info.linkedin.startsWith('http') ? selectedResume.parsed_metadata.contact_info.linkedin : `https://${selectedResume.parsed_metadata.contact_info.linkedin}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:text-violet-300 underline transition-colors"
-                            >
-                              LinkedIn
-                            </a>
-                          </div>
-                        )}
-                        {selectedResume.parsed_metadata.contact_info.website && (
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Globe className="w-3.5 h-3.5 text-violet-400" />
-                            <a
-                              href={selectedResume.parsed_metadata.contact_info.website.startsWith('http') ? selectedResume.parsed_metadata.contact_info.website : `https://${selectedResume.parsed_metadata.contact_info.website}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:text-violet-300 underline transition-colors"
-                            >
-                              Portfolio Website
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="glass-panel p-8 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center h-[350px] opacity-75">
-                <FileText className="w-16 h-16 text-slate-700 mb-4" />
-                <h3 className="text-lg font-semibold text-slate-400">No Resume Selected</h3>
-                <p className="text-xs text-slate-500 max-w-[280px] mt-2">
-                  Upload a PDF resume on the left or select an existing one to view its AI skillset analysis and metadata.
-                </p>
-              </div>
-            )}
+        ) : (
+          <div className="max-w-2xl mx-auto">
+            <InterviewConfig 
+              resumes={resumes} 
+              token={token} 
+              onInterviewStarted={(interview) => setActiveInterview(interview)} 
+            />
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
