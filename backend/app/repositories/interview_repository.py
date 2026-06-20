@@ -54,7 +54,7 @@ class InterviewRepository:
         query = (
             select(Interview)
             .where(Interview.id == interview_id)
-            .options(selectinload(Interview.questions))
+            .options(selectinload(Interview.questions).selectinload(Question.response))
         )
         result = await self.db.execute(query)
         return result.scalars().first()
@@ -66,7 +66,7 @@ class InterviewRepository:
         query = (
             select(Interview)
             .where(Interview.user_id == user_id)
-            .options(selectinload(Interview.questions))
+            .options(selectinload(Interview.questions).selectinload(Question.response))
             .order_by(Interview.created_at.desc())
         )
         result = await self.db.execute(query)

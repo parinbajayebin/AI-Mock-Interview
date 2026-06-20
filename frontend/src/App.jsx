@@ -44,7 +44,8 @@ const ProtectedRoute = ({ children }) => {
 
 import ResumeUpload from './components/ResumeUpload';
 import InterviewConfig from './components/InterviewConfig';
-import { Brain } from 'lucide-react';
+import ActiveInterview from './components/ActiveInterview';
+import { Brain, CheckCircle } from 'lucide-react';
 
 // Verification Dashboard to display auth results, resume analysis, and mock interviews
 const Dashboard = () => {
@@ -54,30 +55,48 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState('resumes'); // 'resumes' or 'interview'
   const [activeInterview, setActiveInterview] = React.useState(null);
+  const [completedInterviewId, setCompletedInterviewId] = React.useState(null);
+  const [ongoingInterview, setOngoingInterview] = React.useState(null);
 
   React.useEffect(() => {
-    const fetchResumes = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/resumes`, {
+        setIsLoading(true);
+        // Fetch Resumes
+        const resumeRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/resumes`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        if (res.ok) {
-          const data = await res.json();
+        if (resumeRes.ok) {
+          const data = await resumeRes.json();
           setResumes(data);
           if (data.length > 0) {
             setSelectedResume(data[0]);
           }
         }
+
+        // Fetch Interviews
+        const interviewRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/interviews`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (interviewRes.ok) {
+          const interviews = await interviewRes.json();
+          const unfinished = interviews.find(i => i.status === 'Created');
+          if (unfinished) {
+            setOngoingInterview(unfinished);
+          }
+        }
       } catch (err) {
-        console.error("Error fetching resumes:", err);
+        console.error("Error fetching dashboard data:", err);
       } finally {
         setIsLoading(false);
       }
     };
     if (token) {
-      fetchResumes();
+      fetchDashboardData();
     }
   }, [token]);
 
@@ -133,8 +152,57 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Unfinished Interview Banner */}
+        {ongoingInterview && !activeInterview && !completedInterviewId && (
+          <div className="glass-panel p-6 rounded-2xl border border-violet-500/30 bg-violet-950/10 mb-8 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in relative overflow-hidden">
+            <div className="absolute -top-10 -left-10 w-24 h-24 bg-violet-600/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-violet-600/20 text-violet-400 rounded-xl border border-violet-500/30 animate-pulse">
+                <Brain className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-bold text-slate-100 text-sm md:text-base">Ongoing Interview Session</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  You have an unfinished {ongoingInterview.difficulty} {ongoingInterview.role} interview.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 shrink-0 w-full md:w-auto">
+              <button
+                onClick={() => {
+                  setActiveInterview(ongoingInterview);
+                  setOngoingInterview(null);
+                }}
+                className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-violet-600/15"
+              >
+                Resume Session
+              </button>
+              <button
+                onClick={async () => {
+                  if (window.confirm("Are you sure you want to discard this session? All answered questions will be deleted permanently.")) {
+                    try {
+                      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/interviews/${ongoingInterview.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      if (res.ok) {
+                        setOngoingInterview(null);
+                      }
+                    } catch (e) {
+                      console.error("Failed to delete interview:", e);
+                    }
+                  }
+                }}
+                className="flex-1 md:flex-none px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-lg text-xs font-semibold transition-all"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Tabs */}
-        {!activeInterview && (
+        {!activeInterview && !completedInterviewId && (
           <div className="flex gap-2 border-b border-slate-800 pb-4 mb-8">
             <button
               onClick={() => setActiveTab('resumes')}
@@ -162,62 +230,69 @@ const Dashboard = () => {
         )}
 
         {/* Action Modules */}
-        {activeInterview ? (
-          <div className="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-violet-400 animate-pulse" />
-                <h2 className="text-xl font-bold text-slate-100">
-                  Active Mock Interview: {activeInterview.role} ({activeInterview.difficulty})
-                </h2>
+        {completedInterviewId ? (
+          <div className="glass-panel p-8 rounded-3xl border border-slate-800 text-center space-y-6 max-w-xl mx-auto shadow-xl relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-green-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div className="relative w-20 h-20 mx-auto">
+              <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl pointer-events-none animate-pulse"></div>
+              <div className="w-20 h-20 border-4 border-green-500/25 border-t-green-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-green-400" />
               </div>
-              <button 
-                onClick={() => setActiveInterview(null)} 
-                className="btn-secondary py-1.5 px-3 text-xs"
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-100">Interview Session Completed!</h3>
+              <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+                All 5 responses and duration tracking metrics have been successfully saved into your PostgreSQL database.
+              </p>
+            </div>
+
+            <div className="p-4 bg-violet-950/20 border border-violet-500/20 text-violet-300 rounded-2xl text-xs flex items-center gap-3 text-left">
+              <Sparkles className="w-5 h-5 text-violet-400 animate-pulse shrink-0" />
+              <div>
+                <span className="font-bold block text-violet-200 mb-0.5">Phase 5 Complete</span>
+                <p className="leading-relaxed">
+                  The active interview state machine, timing engine, and speech-to-text voice dictation are fully operational.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 flex gap-3 justify-center">
+              <button
+                onClick={() => {
+                  setCompletedInterviewId(null);
+                  setActiveTab('interview');
+                }}
+                className="btn-primary py-2 px-5 text-xs font-semibold"
               >
-                Quit Session
+                Start New Session
+              </button>
+              <button
+                onClick={() => {
+                  setCompletedInterviewId(null);
+                  setActiveTab('resumes');
+                }}
+                className="btn-secondary py-2 px-5 text-xs font-semibold"
+              >
+                Back to Dashboard
               </button>
             </div>
-
-            <div className="p-4 bg-violet-950/20 border border-violet-500/20 text-violet-300 rounded-xl text-xs flex items-center gap-3">
-              <Sparkles className="w-4 h-4 shrink-0 text-violet-400 animate-pulse" />
-              <p>
-                <strong>Phase 4 Complete:</strong> Your customized mock interview questions have been generated and stored in the database.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-semibold text-slate-200 text-sm">Generated Questions:</h3>
-              <div className="space-y-3">
-                {activeInterview.questions.map((q, idx) => (
-                  <div key={q.id} className="p-4 bg-slate-900/30 border border-slate-800 rounded-xl space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-wider text-violet-400">
-                      Question {idx + 1}
-                    </p>
-                    <p className="text-sm text-slate-200 font-medium">
-                      {q.question_text}
-                    </p>
-                    {q.expected_skills && q.expected_skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {q.expected_skills.map((skill, sIdx) => (
-                          <span key={sIdx} className="px-2 py-0.5 bg-slate-800 text-[10px] text-slate-400 rounded-md">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-6 bg-slate-900/30 border border-slate-850 rounded-xl text-center space-y-3">
-              <Brain className="w-10 h-10 text-slate-600 mx-auto" />
-              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-normal">
-                Phase 5 will implement the interactive voice/text answer submission environment to record and grade your answers.
-              </p>
-            </div>
           </div>
+        ) : activeInterview ? (
+          <ActiveInterview 
+            interview={activeInterview}
+            token={token}
+            onInterviewFinished={(interviewId) => {
+              setCompletedInterviewId(interviewId);
+              setActiveInterview(null);
+            }}
+            onQuit={() => {
+              if (window.confirm("Are you sure you want to quit? Your active session progress will be lost.")) {
+                setActiveInterview(null);
+              }
+            }}
+          />
         ) : activeTab === 'resumes' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column: Upload & List (5 cols) */}

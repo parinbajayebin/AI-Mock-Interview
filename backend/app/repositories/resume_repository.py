@@ -36,3 +36,9 @@ class ResumeRepository:
             select(Resume).where(Resume.user_id == user_id).order_by(Resume.uploaded_at.desc())
         )
         return list(result.scalars().all())
+
+    async def get_by_id(self, resume_id: uuid.UUID) -> Resume | None:
+        result = await self.session.execute(
+            select(Resume).where(Resume.id == resume_id)
+        )
+        return result.scalars().first()
