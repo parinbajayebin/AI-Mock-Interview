@@ -223,11 +223,34 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
     }
   };
 
+  const [isEvaluating, setIsEvaluating] = React.useState(false);
+
   const handleSubmitInterview = async () => {
     const success = await saveCurrentAnswer();
     if (success) {
-      // Transition to active evaluation phase
-      onInterviewFinished(interview.id);
+      setIsEvaluating(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || ''}/api/interviews/${interview.id}/evaluate`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.detail || 'Failed to evaluate interview');
+        }
+        // Transition to active evaluation phase
+        onInterviewFinished(interview.id);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Error generating AI evaluation. Please try again.');
+        setIsEvaluating(false);
+      }
     }
   };
 
@@ -436,10 +459,15 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
         ) : (
           <button
             onClick={handleSubmitInterview}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isEvaluating}
             className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/15 active:scale-[0.98] transition-all flex items-center gap-1.5"
           >
-            {isSubmitting ? (
+            {isEvaluating ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                <span>AI is evaluating...</span>
+              </>
+            ) : isSubmitting ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                 <span>Submitting...</span>

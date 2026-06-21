@@ -8,7 +8,7 @@ from app.schemas.response import AnswerSubmit, ResponseDetail
 from app.repositories.interview_repository import InterviewRepository
 from app.repositories.resume_repository import ResumeRepository
 from app.repositories.response_repository import ResponseRepository
-from app.services.ai_service import generate_interview_questions
+from app.services.ai_service import generate_interview_questions, evaluate_interview_responses
 from app.auth.routes import get_current_user
 from app.models.user import User
 
@@ -158,3 +158,58 @@ async def delete_interview(
     await db.delete(interview)
     await db.commit()
 
+@router.post("/{interview_id}/evaluate", response_model=InterviewResponse)
+async def evaluate_interview(
+    interview_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Submits all answered questions to Gemini for evaluation, updates scores and feedback,
+    and marks the interview as Evaluated.
+    """
+    interview_repo = InterviewRepository(db)
+    response_repo = ResponseRepository(db)
+    
+    interview = await interview_repo.get_by_id(interview_id)
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+    if interview.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+        
+    # Check if all questions are answered
+    questions_and_responses = []
+    for q in interview.questions:
+        if not q.response:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Cannot evaluate: Question {q.order_index} is not answered."
+            )
+        questions_and_responses.append({
+            "question_id": str(q.id),
+            "question_text": q.question_text,
+            "ideal_answer": q.ideal_answer,
+            "user_answer": q.response.user_answer,
+            "duration_seconds": q.response.duration_seconds
+        })
+
+    # Call Gemini Evaluator
+    evaluation_result = await evaluate_interview_responses(
+        role=interview.role,
+        difficulty=interview.difficulty,
+        questions_and_responses=questions_and_responses
+    )
+    
+    # Update Responses
+    evals = evaluation_result.get("evaluations", [])
+    if evals:
+        await response_repo.update_evaluations(evals)
+        
+    # Update Interview Status
+    interview.status = "Evaluated"
+    await db.commit()
+    await db.refresh(interview)
+    
+    # Reload interview with updated nested responses
+    updated_interview = await interview_repo.get_by_id(interview_id)
+    return updated_interview

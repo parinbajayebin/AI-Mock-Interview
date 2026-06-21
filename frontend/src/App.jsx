@@ -45,6 +45,7 @@ const ProtectedRoute = ({ children }) => {
 import ResumeUpload from './components/ResumeUpload';
 import InterviewConfig from './components/InterviewConfig';
 import ActiveInterview from './components/ActiveInterview';
+import EvaluationReport from './components/EvaluationReport';
 import { Brain, CheckCircle } from 'lucide-react';
 
 // Verification Dashboard to display auth results, resume analysis, and mock interviews
@@ -231,54 +232,14 @@ const Dashboard = () => {
 
         {/* Action Modules */}
         {completedInterviewId ? (
-          <div className="glass-panel p-8 rounded-3xl border border-slate-800 text-center space-y-6 max-w-xl mx-auto shadow-xl relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-green-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div className="relative w-20 h-20 mx-auto">
-              <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl pointer-events-none animate-pulse"></div>
-              <div className="w-20 h-20 border-4 border-green-500/25 border-t-green-500 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-10 h-10 text-green-400" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-slate-100">Interview Session Completed!</h3>
-              <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-                All 5 responses and duration tracking metrics have been successfully saved into your PostgreSQL database.
-              </p>
-            </div>
-
-            <div className="p-4 bg-violet-950/20 border border-violet-500/20 text-violet-300 rounded-2xl text-xs flex items-center gap-3 text-left">
-              <Sparkles className="w-5 h-5 text-violet-400 animate-pulse shrink-0" />
-              <div>
-                <span className="font-bold block text-violet-200 mb-0.5">Phase 5 Complete</span>
-                <p className="leading-relaxed">
-                  The active interview state machine, timing engine, and speech-to-text voice dictation are fully operational.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-4 flex gap-3 justify-center">
-              <button
-                onClick={() => {
-                  setCompletedInterviewId(null);
-                  setActiveTab('interview');
-                }}
-                className="btn-primary py-2 px-5 text-xs font-semibold"
-              >
-                Start New Session
-              </button>
-              <button
-                onClick={() => {
-                  setCompletedInterviewId(null);
-                  setActiveTab('resumes');
-                }}
-                className="btn-secondary py-2 px-5 text-xs font-semibold"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
+          <EvaluationReport 
+            interviewId={completedInterviewId} 
+            token={token}
+            onBackToDashboard={() => {
+              setCompletedInterviewId(null);
+              setActiveTab('resumes');
+            }} 
+          />
         ) : activeInterview ? (
           <ActiveInterview 
             interview={activeInterview}

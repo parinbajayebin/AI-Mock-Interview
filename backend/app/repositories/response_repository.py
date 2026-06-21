@@ -65,3 +65,17 @@ class ResponseRepository:
         )
         result = await self.db.execute(query)
         return result.scalars().first() is not None
+
+    async def update_evaluations(self, evaluations: list[dict]):
+        """
+        Bulk updates the scores and feedback for multiple responses.
+        evaluations is a list of dicts: [{"question_id": str, "score": float, "feedback": str}]
+        """
+        for eval_data in evaluations:
+            q_id = uuid.UUID(str(eval_data["question_id"]))
+            response = await self.get_by_question_id(q_id)
+            if response:
+                response.score = eval_data.get("score")
+                response.feedback = eval_data.get("feedback")
+        
+        await self.db.commit()

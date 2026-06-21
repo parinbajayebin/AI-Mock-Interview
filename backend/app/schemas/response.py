@@ -12,6 +12,8 @@ class ResponseDetail(BaseModel):
     question_id: uuid.UUID
     user_answer: str
     duration_seconds: Optional[int] = None
+    score: Optional[float] = None
+    feedback: Optional[str] = None
     submitted_at: datetime
 
     class Config:
