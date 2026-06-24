@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
+from typing import Optional
 
 from app.core.database import get_db
 from app.schemas.interview import InterviewCreate, InterviewResponse
@@ -66,14 +67,22 @@ async def create_interview(
 
 @router.get("", response_model=list[InterviewResponse])
 async def list_interviews(
+    role: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    status: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Lists all mock interview sessions taken by the current user.
+    Lists all mock interview sessions taken by the current user with optional filters.
     """
     repo = InterviewRepository(db)
-    interviews = await repo.get_user_interviews(current_user.id)
+    interviews = await repo.get_user_interviews(
+        user_id=current_user.id,
+        role=role,
+        difficulty=difficulty,
+        status=status
+    )
     return interviews
 
 @router.get("/{interview_id}", response_model=InterviewResponse)

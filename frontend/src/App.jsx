@@ -47,6 +47,7 @@ import InterviewConfig from './components/InterviewConfig';
 import ActiveInterview from './components/ActiveInterview';
 import EvaluationReport from './components/EvaluationReport';
 import PerformanceAnalytics from './components/PerformanceAnalytics';
+import InterviewHistory from './components/InterviewHistory';
 import { Brain, CheckCircle } from 'lucide-react';
 
 // Verification Dashboard to display auth results, resume analysis, and mock interviews
@@ -238,6 +239,17 @@ const Dashboard = () => {
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span>Performance Analytics</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
+                activeTab === 'history'
+                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
+                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <History className="w-3.5 h-3.5" />
+              <span>Interview History</span>
             </button>
           </div>
         )}
@@ -475,6 +487,13 @@ const Dashboard = () => {
           <PerformanceAnalytics 
             token={token} 
             onStartInterview={() => setActiveTab('interview')} 
+          />
+        ) : activeTab === 'history' ? (
+          <InterviewHistory 
+            token={token}
+            onResumeInterview={(interview) => setActiveInterview(interview)}
+            onViewReport={(id) => setCompletedInterviewId(id)}
+            onStartNew={() => setActiveTab('interview')}
           />
         ) : (
           <div className="max-w-2xl mx-auto">

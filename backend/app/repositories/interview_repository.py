@@ -59,14 +59,27 @@ class InterviewRepository:
         result = await self.db.execute(query)
         return result.scalars().first()
 
-    async def get_user_interviews(self, user_id: uuid.UUID) -> List[Interview]:
+    async def get_user_interviews(
+        self, 
+        user_id: uuid.UUID,
+        role: Optional[str] = None,
+        difficulty: Optional[str] = None,
+        status: Optional[str] = None
+    ) -> List[Interview]:
         """
-        Retrieves all interviews created by a user, ordered by latest.
+        Retrieves all interviews created by a user, ordered by latest with optional filters.
         """
+        query = select(Interview).where(Interview.user_id == user_id)
+        
+        if role:
+            query = query.where(Interview.role.ilike(f"%{role}%"))
+        if difficulty:
+            query = query.where(Interview.difficulty == difficulty)
+        if status:
+            query = query.where(Interview.status == status)
+
         query = (
-            select(Interview)
-            .where(Interview.user_id == user_id)
-            .options(selectinload(Interview.questions).selectinload(Question.response))
+            query.options(selectinload(Interview.questions).selectinload(Question.response))
             .order_by(Interview.created_at.desc())
         )
         result = await self.db.execute(query)

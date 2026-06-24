@@ -51,21 +51,21 @@ This document tracks the live status of the AI-Powered Mock Interview Platform d
   - [x] Implement Interview Generation Service using Gemini 1.5 Flash
   - [x] Store generated interviews and questions in database
   - [x] Build Frontend target role and difficulty configuration page
-- [ ] **Phase 5: Module 5 - Interview Session**
-  - [ ] Implement backend endpoints for fetching session details and submitting answers
-  - [ ] Create Frontend active interview interface (question card, timer, response field)
-  - [ ] Add Session Tracking state machine
-- [ ] **Phase 6: Module 6 - AI Evaluation (Gemini Integration)**
-  - [ ] Design evaluation prompts (comparing answers to expected answers, grading, strengths, weaknesses) using Gemini 1.5 Flash
-  - [ ] Implement Backend evaluation service
-  - [ ] Parse Gemini feedback JSON and store in `evaluations` table
-  - [ ] Build Frontend feedback report interface
-- [ ] **Phase 7: Module 7 - Analytics Dashboard**
-  - [ ] Create aggregation queries for user metrics (average scores, topic performance, history trends)
-  - [ ] Integrate Chart.js/Recharts on Frontend for visual progress charts
-- [ ] **Phase 8: Module 8 - Interview History**
-  - [ ] Create list, search, and filtering endpoints for past interviews
-  - [ ] Build Frontend history page with search/pagination
+- [x] **Phase 5: Module 5 - Interview Session**
+  - [x] Implement backend endpoints for fetching session details and submitting answers
+  - [x] Create Frontend active interview interface (question card, timer, response field)
+  - [x] Add Session Tracking state machine
+- [x] **Phase 6: Module 6 - AI Evaluation (Gemini Integration)**
+  - [x] Design evaluation prompts (comparing answers to expected answers, grading, strengths, weaknesses) using Gemini 1.5 Flash
+  - [x] Implement Backend evaluation service
+  - [x] Parse Gemini feedback JSON and store in `evaluations` table
+  - [x] Build Frontend feedback report interface
+- [x] **Phase 7: Module 7 - Analytics Dashboard**
+  - [x] Create aggregation queries for user metrics (average scores, topic performance, history trends)
+  - [x] Integrate Chart.js/Recharts on Frontend for visual progress charts
+- [x] **Phase 8: Module 8 - Interview History**
+  - [x] Create list, search, and filtering endpoints for past interviews
+  - [x] Build Frontend history page with search/pagination
 - [ ] **Phase 9: DevOps, Nginx, & Production Deployment**
   - [ ] Configure Render deployment settings for FastAPI Backend
   - [ ] Configure Vercel deployment settings for React Frontend
