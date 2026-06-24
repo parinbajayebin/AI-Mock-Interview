@@ -52,7 +52,6 @@ The repository structure remains clean and modular:
 ```text
 AI-Mock-Interview/
 ├── docs/                      # Technical Documentation
-│   ├── PROJECT_STATUS.md      # Live progress and task list
 │   ├── PROJECT_DECISIONS.md   # Architectural & stack rationale
 │   ├── API_DOCUMENTATION.md   # Endpoint specs
 │   ├── DATABASE_DOCUMENTATION.md # Table schema details
@@ -81,7 +80,6 @@ AI-Mock-Interview/
 │   │   ├── repositories/      # Database CRUD layer
 │   │   ├── core/              # Config, DB Setup, Security (Hashing, JWT)
 │   │   └── main.py            # FastAPI entry point
-│   ├── tests/                 # pytest backend test suite
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── .env
