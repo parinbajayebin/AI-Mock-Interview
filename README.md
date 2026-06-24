@@ -1,141 +1,118 @@
-# AI-Powered Mock Interview Platform
+# 🌟 AI-Powered Mock Interview Platform
 
-An advanced, production-inspired AI Mock Interview system designed for recruiters and candidates. The platform reads user resumes, parses key skills, asks highly customized questions matching specific career roles and difficulties using the Gemini API, evaluates responses in real-time, and generates progress dashboards.
+An advanced, production-grade SaaS-inspired platform designed to help candidates conquer their technical interviews. By reading uploaded resumes, parsing technology profiles, generating customized roles/difficulties, and utilizing Google Gemini for real-time grading, it delivers a feedback report and progress dashboard.
+
+🔗 **Production Web App**: [ai-mock-interview-nu-eosin.vercel.app](https://ai-mock-interview-nu-eosin.vercel.app)  
+🔗 **Production API Server**: [ai-mock-interview-do4p.onrender.com](https://ai-mock-interview-do4p.onrender.com)
 
 ---
 
 ## 🚀 Key Features
-* **Resume Parse Engine**: Instantly extracts technology keywords and experiences from uploaded PDF resumes.
-* **Intelligent Question Generator**: Synthesizes 5 tailored questions using the Google Gemini API based on resume profile, target role, and difficulty.
-* **Interactive Interview Terminal**: Displays questions sequentially with active timer tracking.
-* **Detailed AI Evaluation**: Provides overall scoring, technical breakdown by category, detailed feedback per response, and identifying strengths and weaknesses.
-* **Analytics Dashboard**: Tracks historic performance, trends, and focus areas using data visualizations.
-* **Containerized Deployment**: Managed via Docker Compose and Nginx.
+
+* **Resume Parser Engine**: Drag-and-drop PDF parsing that uses Gemini to extract technical skills, professional experience, contact details, and academic backgrounds.
+* **Tailored Question Generator**: Dynamically compiles 5 tailored questions (Coding tasks, Scenario designs, and MCQs) based on the candidate's resume, target role, and career stage.
+* **Interactive Terminal**: An immersive workspace featuring active progress timers, question navigation, and real-time response inputs.
+* **Real-time AI Evaluator**: Comprehensively grades responses against ideal sample solutions, scoring answers, highlighting technical gaps, and listing core strengths/weaknesses.
+* **Performance Analytics**: Visual tracking of performance trends with customized responsive SVG line charts, average response metrics, and skill proficiency breakdowns.
+* **Session Recovery & History**: Complete mock history management. Easily search, filter, delete, or resume incomplete sessions.
 
 ---
 
-## 🛠️ Tech Stack
-* **Frontend**: React (Single Page Application via Vite), Tailwind CSS
-* **Backend**: FastAPI (Python asynchronous framework), SQLAlchemy ORM, Pydantic
-* **Database**: PostgreSQL (ACID-compliant relational storage)
-* **AI Core**: Google Gemini Pro & Flash API
-* **Gateway & Web server**: Nginx (reverse proxy and static files router)
-* **DevOps**: Docker, Docker Compose
+## 🛠️ Technology Stack
+
+* **Frontend**: React (Vite SPA) with Tailwind CSS for glassmorphic styling
+* **Backend**: FastAPI (Python asynchronous framework) with SQLAlchemy ORM and Pydantic
+* **Database**: PostgreSQL (relational ACID-compliant storage)
+* **Proxy & Serving**: Nginx (used locally as a reverse proxy gateway)
+* **AI Core**: Google Gemini 1.5 Flash / 2.5 Flash / 3.5 Flash APIs (with local heuristic fallbacks)
+* **Deployment**: Docker & Docker Compose (Local), Render (Backend Web Service), Vercel (Frontend Static hosting)
 
 ---
 
-## 📂 Repository Structure
-
-The code is organized according to clean, layered, and domain-driven architectural patterns:
+## 📂 Project Structure
 
 ```text
 AI-Mock-Interview/
 ├── docs/                      # Technical Documentation
-│   ├── PROJECT_DECISIONS.md   # Architectural & stack rationale
-│   ├── API_DOCUMENTATION.md   # Endpoint specs
-│   ├── DATABASE_DOCUMENTATION.md # Table schema details
-│   └── ARCHITECTURE.md        # Core design and system data flows
-├── frontend/                  # React SPA (Vite + Tailwind)
-├── backend/                   # FastAPI Backend
-│   └── app/
-│       ├── auth/              # Registration & Login endpoints
-│       ├── resume/            # PDF file upload & storage
-│       ├── interview/         # Question generation & session state
-│       ├── evaluation/        # AI Grading & feedback
-│       ├── analytics/         # Aggregated performance stats
-│       ├── models/            # SQLAlchemy Database Models
-│       ├── schemas/           # Pydantic validation schemas
-│       ├── services/          # Gemini API integrations & business logic
-│       ├── repositories/      # Database CRUD layer
-│       ├── core/              # Config, DB connection, Security helper
-│       └── main.py            # FastAPI entry point
-├── database/                  # SQL Schema scripts
-│   ├── schema.sql             # SQL DDL script
-│   └── seed.sql               # Initial test data
-├── docker/                    # Web server configs
-│   └── nginx.conf             # Nginx reverse proxy configuration
-├── docker-compose.yml         # Container orchestrator config
-├── .env.example               # Template for environment settings
-└── README.md                  # This file
+│   ├── ARCHITECTURE.md        # Core design & system data flows
+│   ├── API_DOCUMENTATION.md   # Complete REST API endpoint specs
+│   ├── DATABASE_DOCUMENTATION.md # PostgreSQL Table schemas
+│   └── PROJECT_DECISIONS.md   # Architectural & stack decisions
+├── frontend/                  # React SPA (Vite + Tailwind CSS)
+│   ├── src/
+│   │   ├── components/        # Resume Upload, Config, Active Terminal, History, Analytics
+│   │   └── App.jsx            # Main app container & routing logic
+│   └── vercel.json            # Vercel deployment & API rewrite config
+├── backend/                   # FastAPI Server
+│   ├── app/
+│   │   ├── auth/              # JWT Registration & Authentication
+│   │   ├── resume/            # PDF parsing & storage
+│   │   ├── interview/         # Session config & state controllers
+│   │   ├── analytics/         # SQL aggregates & performance data
+│   │   ├── services/          # Gemini API integrations
+│   │   └── main.py            # API gateway entry point
+│   └── Dockerfile             # Production Python build instruction
+├── database/                  # SQL DDL Schemas & initial seed datasets
+├── docker/                    # Nginx reverse proxy configuration
+└── docker-compose.yml         # Local container orchestration script
 ```
 
 ---
 
-## 🗺️ Development Roadmap
+## ⚙️ Local Development (Running with Docker)
 
-### Phase 0: Design & Specifications (Current)
-* Design Database DDL and Entity Relationships.
-* Outline REST API endpoint specifications.
-* Establish folder organization guidelines.
-* Create technical project documentation.
+Running the entire system locally requires only **Docker** and a **Gemini API Key**.
 
-### Phase 1: Authentication & User Accounts
-* Setup FastAPI backend skeleton.
-* Configure PostgreSQL ORM connections.
-* Implement user signup, hashing (bcrypt), and token (JWT) endpoints.
-* Create React sign-in and registration pages.
+### 1. Configure Environment
+Clone the project, create a `.env` file in the root directory, and fill in the necessary keys:
+```env
+# Database Credentials
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres_secure_pass
+POSTGRES_DB=ai_mock_interview
 
-### Phase 2: Resume PDF Upload
-* Enable PDF multipart file uploads.
-* Configure local file volumes for file persistence.
-* Build frontend drag-and-drop file upload UI.
+# Database connection URL
+DATABASE_URL=postgresql+asyncpg://postgres:postgres_secure_pass@db:5432/ai_mock_interview
 
-### Phase 3: Resume Analysis
-* Integrate Gemini API to extract skills and experience.
-* Store resume profiles in database.
-* Render resume parsing dashboard for candidates.
+# Gemini API Integration
+GEMINI_API_KEY=your_gemini_api_key
 
-### Phase 4: Interview Question Generator
-* Create prompt templates for target roles and difficulties.
-* Enforce structured JSON responses from Gemini containing technical questions.
-* Setup database tables for interview sessions and questions.
+# JWT Token Secret
+JWT_SECRET_KEY=your_super_secure_jwt_secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+```
 
-### Phase 5: Interview Session Terminal
-* Create question navigation, typing terminal, and timing trackers.
-* Record answers and durations sequentially.
-
-### Phase 6: AI-Based Evaluation
-* Grade responses against expected ideal answers using Gemini.
-* Extract overall score, strengths, weaknesses, and key metrics.
-* Display evaluation dashboard reports.
-
-### Phase 7: Analytics & Progress Dashboard
-* Write SQL aggregations to calculate historical performance.
-* Visualize metrics on frontend with interactive charts.
-
-### Phase 8: Mock Interview History
-* Build history lists with filter, search, and pagination capabilities.
-
-### Phase 9: DevOps, Proxying & Productionizing
-* Compose Dockerfiles and Nginx routing configs.
-* Deploy entire stack via `docker-compose up`.
-
----
-
-## 💻 Setup & Installation (Local Development)
-
-### Prerequisites
-* Docker and Docker Compose installed.
-* A Google Gemini API Key.
-
-### Initial Configuration
-1. Clone the repository and navigate to the project directory:
-   ```bash
-   cd AI-Mock-Interview
-   ```
-2. Create your `.env` file by copying the template:
-   ```bash
-   cp .env.example .env
-   ```
-3. Open `.env` and fill in your details:
-   * Generate a secure string for `JWT_SECRET_KEY`
-   * Paste your `GEMINI_API_KEY`
-
-### Running the System
-We run the entire system inside Docker containers:
+### 2. Boot up the Containers
+In the project root, launch the docker container stack:
 ```bash
 docker-compose up --build
 ```
-* **Frontend Dashboard**: Open `http://localhost`
-* **API Documentation**: Open `http://localhost/api/docs` or `http://localhost:8000/docs`
-* **PostgreSQL Database**: Accessible internally via port `5432`.
+
+* **Frontend App**: Access [http://localhost](http://localhost) (routed via Nginx proxy).
+* **API Documentation**: Open [http://localhost/api/docs](http://localhost/api/docs) or [http://localhost:8000/docs](http://localhost:8000/docs).
+* **PostgreSQL Database**: Port `5432` internally.
+
+---
+
+## 🌐 Production Architecture & Deployment
+
+The live system uses a split-tier architecture:
+
+1. **Frontend Hosting (Vercel)**:
+   * Serves static HTML/JS/CSS assets with maximum global delivery speed.
+   * Leverages a rewrite rule inside `vercel.json` to proxy `/api/*` requests to Render, securing cookies/session states and avoiding cross-origin (CORS) header issues.
+2. **Backend Web Service (Render)**:
+   * Runs the containerized Python FastAPI backend using the project's `Dockerfile`.
+   * Integrates with a managed database instance and communicates directly with the Google Gemini API.
+
+---
+
+## 👥 Authors & Contributors
+
+Meet the developers behind the platform:
+
+* **Parin Makwana**  
+  🔗 [GitHub](https://github.com/parinbajayebin) | 🔗 [LinkedIn](https://www.linkedin.com/in/parin-makwana/)
+* **Mayank Jayswal**  
+  🔗 [GitHub](https://github.com/jayswalmayank05) | 🔗 [LinkedIn](https://www.linkedin.com/in/mayank-jayswal/)
