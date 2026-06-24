@@ -31,7 +31,6 @@ The code is organized according to clean, layered, and domain-driven architectur
 ```text
 AI-Mock-Interview/
 ├── docs/                      # Technical Documentation
-│   ├── PROJECT_STATUS.md      # Live progress and task list
 │   ├── PROJECT_DECISIONS.md   # Architectural & stack rationale
 │   ├── API_DOCUMENTATION.md   # Endpoint specs
 │   ├── DATABASE_DOCUMENTATION.md # Table schema details
