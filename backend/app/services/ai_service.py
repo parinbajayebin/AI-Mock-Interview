@@ -1,25 +1,136 @@
 import asyncio
 import json
 import logging
+import random
+import httpx
 import google.generativeai as genai
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+async def _call_llm_json(prompt: str, system_instruction: str = None) -> dict:
+    """
+    Unified client to fetch structured JSON data from either Gemini, Groq, or OpenRouter.
+    """
+    provider = settings.LLM_PROVIDER.lower() if settings.LLM_PROVIDER else "gemini"
+    
+    # Try to auto-fallback/detect provider if the selected provider key is missing
+    if provider == "gemini" and not settings.GEMINI_API_KEY:
+        if settings.GROQ_API_KEY:
+            provider = "groq"
+            logger.info("GEMINI_API_KEY missing. Auto-routing to Groq.")
+        elif settings.OPENROUTER_API_KEY:
+            provider = "openrouter"
+            logger.info("GEMINI_API_KEY missing. Auto-routing to OpenRouter.")
+        else:
+            raise ValueError("No LLM API keys configured.")
+            
+    if provider == "gemini":
+        if not settings.GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY is not configured.")
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel(settings.GEMINI_MODEL)
+        
+        full_content = prompt
+        if system_instruction:
+            full_content = f"{system_instruction}\n\n{prompt}"
+            
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                model.generate_content,
+                full_content,
+                generation_config={"response_mime_type": "application/json"}
+            ),
+            timeout=25.0
+        )
+        return json.loads(response.text)
+        
+    elif provider == "groq":
+        if not settings.GROQ_API_KEY:
+            raise ValueError("GROQ_API_KEY is not configured.")
+        
+        headers = {
+            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
+        
+        payload = {
+            "model": settings.GROQ_MODEL,
+            "messages": messages,
+            "response_format": {"type": "json_object"},
+            "temperature": 0.3
+        }
+        
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=25.0
+            )
+            res.raise_for_status()
+            data = res.json()
+            content = data["choices"][0]["message"]["content"]
+            return json.loads(content)
+            
+    elif provider == "openrouter":
+        if not settings.OPENROUTER_API_KEY:
+            raise ValueError("OPENROUTER_API_KEY is not configured.")
+        
+        headers = {
+            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/parinbajayebin/AI-Mock-Interview",
+            "X-Title": "AI Mock Interview Platform"
+        }
+        
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
+        
+        payload = {
+            "model": settings.OPENROUTER_MODEL,
+            "messages": messages,
+            "response_format": {"type": "json_object"},
+            "temperature": 0.3
+        }
+        
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=25.0
+            )
+            res.raise_for_status()
+            data = res.json()
+            content = data["choices"][0]["message"]["content"]
+            return json.loads(content)
+            
+    else:
+        raise ValueError(f"Unsupported LLM provider: {provider}")
+
 async def analyze_resume_text(raw_text: str) -> dict:
     """
-    Parses resume text using Gemini 3.5 Flash and returns a structured dictionary:
+    Parses resume text and returns a structured dictionary:
     {
         "skills": ["Skill1", "Skill2", ...],
         "experience_summary": "...",
         "parsed_metadata": { ... }
     }
     """
-    if not settings.GEMINI_API_KEY:
-        logger.error("GEMINI_API_KEY is not configured.")
+    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY
+    if not has_keys:
+        logger.error("No LLM API keys are configured.")
         return {
             "skills": [],
-            "experience_summary": "Gemini API key is not configured. Could not generate summary.",
+            "experience_summary": "No LLM API key is configured. Could not generate summary.",
             "parsed_metadata": {}
         }
 
@@ -55,27 +166,17 @@ async def analyze_resume_text(raw_text: str) -> dict:
     """
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-3.5-flash')
-        
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                model.generate_content,
-                f"{prompt}\n\nResume Text:\n{raw_text}",
-                generation_config={"response_mime_type": "application/json"}
-            ),
-            timeout=25.0
+        result = await _call_llm_json(
+            prompt=f"Please analyze the following resume text and output the requested JSON object:\n\n{raw_text}",
+            system_instruction=prompt
         )
-        
-        result = json.loads(response.text)
         return {
             "skills": result.get("skills", []),
             "experience_summary": result.get("experience_summary", ""),
             "parsed_metadata": result.get("parsed_metadata", {})
         }
     except Exception as e:
-        logger.exception("Failed to analyze resume with Gemini")
-        # Return fallback values so the application does not crash
+        logger.exception("Failed to analyze resume with LLM")
         return {
             "skills": [],
             "experience_summary": f"Failed to parse resume with AI. Error: {str(e)}",
@@ -90,11 +191,11 @@ async def generate_interview_questions(
 ) -> list[dict]:
     """
     Generates 5 tailored technical interview questions based on target role, difficulty,
-    and optional resume text/skills. Uses Gemini 3.5 Flash.
+    and optional resume text/skills.
     """
-    if not settings.GEMINI_API_KEY:
-        logger.error("GEMINI_API_KEY is not configured.")
-        # Fallback hardcoded questions
+    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY
+    if not has_keys:
+        logger.error("No LLM API keys are configured.")
         return _get_fallback_questions(role, difficulty)
 
     past_questions_context = ""
@@ -137,24 +238,17 @@ async def generate_interview_questions(
     """
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-3.5-flash')
-        
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                model.generate_content,
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            ),
-            timeout=25.0
-        )
-        
-        questions = json.loads(response.text)
+        questions = await _call_llm_json(prompt=prompt)
         if isinstance(questions, list) and len(questions) > 0:
             return questions
-        raise ValueError("Invalid format returned by Gemini")
+        # Sometimes models wrap lists in an object, try to extract it if so
+        if isinstance(questions, dict):
+            for key, val in questions.items():
+                if isinstance(val, list) and len(val) > 0:
+                    return val
+        raise ValueError("Invalid format returned by LLM")
     except Exception as e:
-        logger.exception("Failed to generate interview questions with Gemini")
+        logger.exception("Failed to generate interview questions with LLM")
         return _get_fallback_questions(role, difficulty)
 
 def _get_fallback_questions(role: str, difficulty: str) -> list[dict]:
@@ -297,7 +391,7 @@ async def evaluate_interview_responses(
     questions_and_responses: list[dict]
 ) -> dict:
     """
-    Evaluates candidate responses against ideal answers using Gemini.
+    Evaluates candidate responses against ideal answers using LLM.
     Inputs a list of dicts:
     [
       {
@@ -310,8 +404,9 @@ async def evaluate_interview_responses(
     ]
     Returns a dict with overall_score, general_feedback, and a list of evaluations.
     """
-    if not settings.GEMINI_API_KEY:
-        logger.error("GEMINI_API_KEY is not configured. Returning mock evaluation.")
+    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY
+    if not has_keys:
+        logger.error("No LLM API keys are configured. Returning mock evaluation.")
         return _get_fallback_evaluations(questions_and_responses)
 
     prompt = f"""
@@ -344,22 +439,10 @@ async def evaluate_interview_responses(
     """
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-3.5-flash')
-        
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                model.generate_content,
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            ),
-            timeout=25.0
-        )
-        
-        result = json.loads(response.text)
+        result = await _call_llm_json(prompt=prompt)
         return result
     except Exception as e:
-        logger.exception("Failed to evaluate interview with Gemini")
+        logger.exception("Failed to evaluate interview with LLM")
         return _get_fallback_evaluations(questions_and_responses)
 
 def _get_fallback_evaluations(questions_and_responses: list[dict]) -> dict:

@@ -27,8 +27,16 @@ class Settings(BaseSettings):
     # Database Settings
     DATABASE_URL: str = Field(default="postgresql+asyncpg://postgres:postgres_secure_pass@localhost:5432/ai_mock_interview")
 
-    # Gemini Settings
+    # LLM Provider Configuration
+    LLM_PROVIDER: str = Field(default="gemini")
     GEMINI_API_KEY: Optional[str] = Field(default=None)
+    GEMINI_MODEL: str = Field(default="gemini-3.5-flash")
+    
+    # Alternative Free LLM Providers
+    GROQ_API_KEY: Optional[str] = Field(default=None)
+    GROQ_MODEL: str = Field(default="llama-3.3-70b-versatile")
+    OPENROUTER_API_KEY: Optional[str] = Field(default=None)
+    OPENROUTER_MODEL: str = Field(default="meta-llama/llama-3-8b-instruct:free")
 
     # Frontend URL (used for CORS, redirect links, etc.)
     FRONTEND_URL: str = Field(default="http://localhost:5173")
