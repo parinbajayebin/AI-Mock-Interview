@@ -115,4 +115,4 @@ Meet the developers behind the platform:
 * **Parin Makwana**  
   🔗 [GitHub](https://github.com/parinbajayebin) | 🔗 [LinkedIn](https://www.linkedin.com/in/parin-makwana-b614a6333?utm_source=share_via&utm_content=profile&utm_medium=member_android)
 * **Mayank Jayswal**  
-  🔗 [GitHub](https://github.com/mayank-jayswal) | 🔗 [LinkedIn](https://www.linkedin.com/in/mayank-jayswal/)
+  🔗 [GitHub](https://github.com/mayank-jayswal) | 🔗 [LinkedIn](https://in.linkedin.com/in/mayank-jayswal-3a7272378)
