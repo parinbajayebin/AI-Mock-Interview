@@ -48,7 +48,7 @@ import ActiveInterview from './components/ActiveInterview';
 import EvaluationReport from './components/EvaluationReport';
 import PerformanceAnalytics from './components/PerformanceAnalytics';
 import InterviewHistory from './components/InterviewHistory';
-import { Brain, CheckCircle } from 'lucide-react';
+import { Brain, CheckCircle, Menu, X } from 'lucide-react';
 
 // Verification Dashboard to display auth results, resume analysis, and mock interviews
 const Dashboard = () => {
@@ -60,6 +60,7 @@ const Dashboard = () => {
   const [activeInterview, setActiveInterview] = React.useState(null);
   const [completedInterviewId, setCompletedInterviewId] = React.useState(null);
   const [ongoingInterview, setOngoingInterview] = React.useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     const fetchDashboardData = async () => {
@@ -116,64 +117,147 @@ const Dashboard = () => {
 
       {/* ── Sidebar Navigation (hidden during active sessions for focus mode) ── */}
       {!activeInterview && !completedInterviewId && (
-        <aside className="w-full md:w-72 shrink-0 glass-panel md:min-h-screen sticky top-0 z-10 flex flex-col justify-between p-6 border-b md:border-b-0 md:border-r border-border">
-          <div className="space-y-6">
+        <>
+          {/* Mobile Navigation Header */}
+          <header className="flex md:hidden items-center justify-between p-4 sticky top-0 z-30 w-full glass-panel border-b border-border">
             {/* Logo */}
-            <div className="flex items-center gap-2 px-1">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-sm">
-                <Sparkles className="w-4 h-4 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="font-display font-bold tracking-tight text-[16px] text-primary">InterviewSignal</span>
+              <span className="font-display font-bold tracking-tight text-[15px] text-primary">InterviewSignal</span>
             </div>
-
-            {/* Profile Info */}
-            <div className="bg-base/50 border border-border/80 rounded-signal-lg p-3.5 relative overflow-hidden transition-all hover:bg-base/70">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-display font-bold text-sm shrink-0">
-                  {user.full_name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight">{user.full_name}</h4>
-                  <p className="text-[11px] text-muted truncate mt-0.5">{user.email}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Nav Tabs */}
-            <nav className="space-y-1">
-              {[
-                { key: 'resumes', icon: FileText, label: 'Your Resumes' },
-                { key: 'interview', icon: Brain, label: 'Interview Room' },
-                { key: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
-                { key: 'history', icon: History, label: 'Interview History' },
-              ].map(({ key, icon: Icon, label }) => {
-                const isActive = activeTab === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setActiveTab(key)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${
-                      isActive
-                        ? 'bg-accent/5 border-accent/20 text-accent shadow-sm'
-                        : 'bg-transparent border-transparent text-secondary hover:bg-base/50 hover:text-primary hover:border-border'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
-                    <span>{label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Logout button */}
-          <div className="pt-4 mt-6 border-t border-border/60">
-            <button onClick={logout} className="w-full btn-secondary flex items-center justify-center gap-2 py-2 px-3 text-[13px] group">
-              <LogOut className="w-4 h-4 text-secondary group-hover:text-primary transition-colors" />
-              <span>Sign Out</span>
+            
+            {/* Hamburger Toggle */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-1.5 rounded-lg bg-white/20 border border-white/30 text-secondary hover:text-primary transition-all active:scale-95"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-          </div>
-        </aside>
+          </header>
+
+          {/* Mobile Menu Dropdown Panel */}
+          {mobileMenuOpen && (
+            <div className="block md:hidden fixed inset-x-4 top-20 z-20 glass-panel p-5 space-y-5 animate-scale-in">
+              {/* Profile Info */}
+              <div className="bg-white/10 border border-white/20 rounded-signal-lg p-3.5 relative overflow-hidden">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-display font-bold text-sm shrink-0">
+                    {user.full_name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight">{user.full_name}</h4>
+                    <p className="text-[11px] text-muted truncate mt-0.5">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nav Tabs */}
+              <nav className="space-y-1">
+                {[
+                  { key: 'resumes', icon: FileText, label: 'Your Resumes' },
+                  { key: 'interview', icon: Brain, label: 'Interview Room' },
+                  { key: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
+                  { key: 'history', icon: History, label: 'Interview History' },
+                ].map(({ key, icon: Icon, label }) => {
+                  const isActive = activeTab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setActiveTab(key);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${
+                        isActive
+                          ? 'bg-accent/5 border-accent/20 text-accent shadow-sm'
+                          : 'bg-white/10 border-white/20 text-secondary hover:bg-white/20 hover:text-primary hover:border-white/30'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Sign Out */}
+              <div className="pt-4 border-t border-border/60">
+                <button 
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }} 
+                  className="w-full btn-secondary flex items-center justify-center gap-2 py-2 px-3 text-[13px]"
+                >
+                  <LogOut className="w-4 h-4 text-secondary" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Sidebar (hidden on mobile) */}
+          <aside className="hidden md:flex w-72 shrink-0 glass-panel min-h-screen sticky top-0 z-10 flex-col justify-between p-6 border-r border-border">
+            <div className="space-y-6">
+              {/* Logo */}
+              <div className="flex items-center gap-2 px-1">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-sm">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-display font-bold tracking-tight text-[16px] text-primary">InterviewSignal</span>
+              </div>
+
+              {/* Profile Info */}
+              <div className="bg-white/15 border border-white/25 rounded-signal-lg p-3.5 relative overflow-hidden transition-all hover:bg-white/25">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-display font-bold text-sm shrink-0">
+                    {user.full_name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight">{user.full_name}</h4>
+                    <p className="text-[11px] text-muted truncate mt-0.5">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nav Tabs */}
+              <nav className="space-y-1">
+                {[
+                  { key: 'resumes', icon: FileText, label: 'Your Resumes' },
+                  { key: 'interview', icon: Brain, label: 'Interview Room' },
+                  { key: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
+                  { key: 'history', icon: History, label: 'Interview History' },
+                ].map(({ key, icon: Icon, label }) => {
+                  const isActive = activeTab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActiveTab(key)}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${
+                        isActive
+                          ? 'bg-accent/5 border-accent/20 text-accent shadow-sm'
+                          : 'bg-transparent border-transparent text-secondary hover:bg-white/15 hover:text-primary hover:border-white/25'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Logout button */}
+            <div className="pt-4 mt-6 border-t border-border/60">
+              <button onClick={logout} className="w-full btn-secondary flex items-center justify-center gap-2 py-2 px-3 text-[13px] group">
+                <LogOut className="w-4 h-4 text-secondary group-hover:text-primary transition-colors" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </aside>
+        </>
       )}
 
       {/* ── Main Content Area ── */}
