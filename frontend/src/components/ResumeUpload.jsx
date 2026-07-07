@@ -76,21 +76,28 @@ export default function ResumeUpload({ onUploadSuccess }) {
   };
 
   return (
-    <div className="glass-panel p-8 rounded-2xl border border-slate-800 h-full flex flex-col">
+    <div className="glass-panel p-5 rounded-signal-lg flex flex-col">
+      <h3 className="font-display font-semibold text-primary mb-3.5 flex items-center gap-2">
+        <UploadCloud className="w-4 h-4 text-accent" />
+        <span>Upload Resume</span>
+      </h3>
+
       <div
-        className={`flex-1 border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all ${
-          isDragging ? 'border-violet-500 bg-violet-500/10' : 'border-slate-700 bg-slate-900/30'
+        className={`flex-1 border-2 border-dashed rounded-signal-md p-6 flex flex-col items-center justify-center transition-all duration-300 ${
+          isDragging 
+            ? 'border-accent bg-accent/5 shadow-inner' 
+            : 'border-border bg-white/10 hover:border-accent/40 hover:bg-white/20'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <UploadCloud className={`w-12 h-12 mb-4 ${isDragging ? 'text-violet-400' : 'text-slate-500'}`} />
-        <p className="text-slate-300 font-medium mb-2 text-center">Drag and drop your resume PDF here</p>
-        <p className="text-slate-500 text-xs mb-6 text-center">or click to browse from your computer</p>
+        <UploadCloud className={`w-9 h-9 mb-2.5 transition-colors ${isDragging ? 'text-accent' : 'text-secondary/60'}`} />
+        <p className="text-primary font-bold text-[13px] text-center">Drag & drop resume PDF here</p>
+        <p className="text-secondary text-[11px] mb-4 text-center">or browse from your device</p>
         <button
           onClick={() => fileInputRef.current.click()}
-          className="btn-primary text-sm"
+          className="btn-secondary text-[12px] py-1.5 px-3"
           disabled={isUploading}
         >
           Select File
@@ -105,27 +112,29 @@ export default function ResumeUpload({ onUploadSuccess }) {
       </div>
 
       {error && (
-        <div className="mt-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-200">{error}</p>
+        <div className="mt-4 p-3 bg-red-50/50 backdrop-blur-md border border-red-200 rounded-signal-md flex items-start gap-2.5 animate-scale-in">
+          <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-[12px] text-red-700 leading-snug">{error}</p>
         </div>
       )}
 
       {file && (
-        <div className="mt-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FileText className="w-6 h-6 text-violet-400" />
-            <div>
-              <p className="text-sm font-medium text-slate-200 truncate max-w-[150px]">
+        <div className="mt-4 p-3 bg-white/30 backdrop-blur-md rounded-signal-md border border-white/40 flex items-center justify-between shadow-sm animate-scale-in">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded bg-accent/10 flex items-center justify-center shrink-0">
+              <FileText className="w-4.5 h-4.5 text-accent" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[12px] font-bold text-primary truncate max-w-[130px]">
                 {file.name}
               </p>
-              <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+              <p className="text-[10px] text-secondary">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setFile(null)}
-              className="p-1 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-1.5 hover:bg-base rounded-full text-secondary hover:text-primary transition-colors"
               disabled={isUploading}
             >
               <X className="w-4 h-4" />
@@ -133,12 +142,12 @@ export default function ResumeUpload({ onUploadSuccess }) {
             <button
               onClick={handleUpload}
               disabled={isUploading}
-              className="btn-primary text-xs py-1.5 px-3 flex items-center"
+              className="btn-primary text-[11px] py-1.5 px-2.5 flex items-center"
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
-                  Uploading...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                  <span>Uploading</span>
                 </>
               ) : (
                 'Upload'

@@ -79,25 +79,25 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Search & Filters */}
-      <div className="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="glass-panel p-4 rounded-signal-lg border border-border flex flex-col md:flex-row gap-3 items-center justify-between shadow-sm">
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
           <input
             type="text"
             placeholder="Search target role..."
             value={searchRole}
             onChange={(e) => setSearchRole(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 placeholder-slate-600 transition-all"
+            className="w-full pl-9 pr-4 py-2 glass-input rounded-signal-md text-[13px] focus:outline-none"
           />
         </div>
 
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex gap-2 w-full md:w-auto">
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value)}
-            className="flex-1 md:flex-none px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 text-sm focus:outline-none focus:border-violet-500/50"
+            className="flex-1 md:flex-none px-3 py-2 glass-input rounded-signal-md text-[13px] focus:outline-none"
           >
             <option value="">All Difficulties</option>
             <option value="Entry-Level">Entry-Level</option>
@@ -108,7 +108,7 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="flex-1 md:flex-none px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 text-sm focus:outline-none focus:border-violet-500/50"
+            className="flex-1 md:flex-none px-3 py-2 glass-input rounded-signal-md text-[13px] focus:outline-none"
           >
             <option value="">All Statuses</option>
             <option value="Created">In-Progress</option>
@@ -120,18 +120,18 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
       {/* History List */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : error ? (
-        <div className="glass-panel p-8 rounded-2xl border border-red-500/20 bg-red-950/5 text-center flex flex-col items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="glass-panel p-8 rounded-signal-lg border border-red-200 bg-red-50 text-center flex flex-col items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
+          <p className="text-red-700 text-sm font-semibold">{error}</p>
         </div>
       ) : interviews.length === 0 ? (
-        <div className="glass-panel p-12 rounded-2xl border border-slate-800 text-center flex flex-col items-center justify-center min-h-[300px]">
-          <Brain className="w-12 h-12 text-slate-700 mb-4" />
-          <h3 className="text-slate-300 font-semibold">No interviews match your filters</h3>
-          <p className="text-slate-500 text-xs mt-1 max-w-sm">
+        <div className="glass-panel p-12 rounded-signal-lg border border-border text-center flex flex-col items-center justify-center min-h-[300px]">
+          <Brain className="w-12 h-12 text-secondary/40 mb-4" />
+          <h3 className="text-primary font-bold">No interviews match your filters</h3>
+          <p className="text-secondary text-[13px] mt-1.5 max-w-sm">
             Try adjusting your search criteria or configure a new mock interview session to practice.
           </p>
           {(searchRole || difficulty || status) ? (
@@ -141,7 +141,7 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
                 setDifficulty('');
                 setStatus('');
               }}
-              className="mt-6 px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 rounded-xl text-xs font-semibold transition-all"
+              className="mt-6 btn-secondary py-1.5 px-4 text-xs font-bold"
             >
               Reset Filters
             </button>
@@ -151,7 +151,7 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
               className="btn-primary mt-6 flex items-center gap-1.5 py-2 px-4 text-xs font-bold"
             >
               <span>Setup Interview Session</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3.5 h-3.5 text-white" />
             </button>
           )}
         </div>
@@ -174,17 +174,17 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
             return (
               <div 
                 key={item.id} 
-                className="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between group relative overflow-hidden"
+                className="glass-panel p-5 rounded-signal-lg border border-border hover:border-accent/40 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden shadow-sm"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-600/5 rounded-bl-full pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-bl-full pointer-events-none"></div>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-start gap-4">
                     <div>
-                      <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      <span className="text-[9px] font-bold text-accent bg-accent/5 border border-accent/15 px-2 py-0.5 rounded-full uppercase tracking-wider">
                         {item.difficulty}
                       </span>
-                      <h4 className="font-bold text-slate-200 mt-2 text-base leading-tight truncate max-w-[200px]">
+                      <h4 className="font-display font-black text-primary mt-2 text-base leading-tight truncate max-w-[200px]" title={item.role}>
                         {item.role}
                       </h4>
                     </div>
@@ -192,30 +192,30 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
                     <div className="text-right shrink-0">
                       {isEvaluated ? (
                         <div className="flex flex-col items-end">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Score</span>
-                          <span className={`text-lg font-extrabold ${avgScore >= 70 ? 'text-emerald-400' : avgScore >= 45 ? 'text-amber-400' : 'text-red-400'}`}>
+                          <span className="text-[9px] font-bold text-muted uppercase tracking-wider">Score</span>
+                          <span className={`text-lg font-black leading-none mt-0.5 ${avgScore >= 70 ? 'text-emerald-600' : avgScore >= 45 ? 'text-amber-600' : 'text-red-600'}`}>
                             {avgScore}%
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full animate-pulse">
+                        <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full animate-pulse">
                           In Progress
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <Calendar className="w-3.5 h-3.5 text-slate-600" />
+                  <div className="flex items-center gap-1.5 text-[11px] text-secondary">
+                    <Calendar className="w-3.5 h-3.5 text-secondary/60" />
                     <span>{new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-slate-900 mt-5 pt-4">
+                <div className="flex items-center justify-between border-t border-border mt-5 pt-3.5">
                   <button
                     onClick={(e) => handleDelete(item.id, e)}
-                    className="p-2 text-slate-600 hover:text-red-400 bg-slate-950 border border-slate-900 hover:border-red-500/20 rounded-xl transition-all"
-                    title="Delete interview session"
+                    className="p-2 text-secondary hover:text-red-600 bg-white/15 border border-white/25 hover:border-red-200 rounded-signal-md transition-all duration-200"
+                    title="Delete interview history"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -223,7 +223,7 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
                   {isEvaluated ? (
                     <button
                       onClick={() => onViewReport(item.id)}
-                      className="px-4 py-1.5 bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 text-violet-300 text-xs font-bold rounded-xl flex items-center gap-1 transition-all"
+                      className="btn-secondary py-1.5 px-3.5 text-[12px] flex items-center gap-1"
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span>Feedback Report</span>
@@ -231,7 +231,7 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
                   ) : (
                     <button
                       onClick={() => onResumeInterview(item)}
-                      className="px-4 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition-all shadow-lg shadow-violet-600/10"
+                      className="btn-primary py-1.5 px-3.5 text-[12px] flex items-center gap-1"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span>Resume Session</span>

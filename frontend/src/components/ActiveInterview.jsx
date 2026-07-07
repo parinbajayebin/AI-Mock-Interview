@@ -276,16 +276,16 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
           </pre>
         );
       }
-      return <p key={index} className="text-slate-200 text-sm md:text-base leading-relaxed whitespace-pre-line">{part}</p>;
+      return <p key={index} className="text-primary text-sm md:text-base leading-relaxed whitespace-pre-line">{part}</p>;
     });
   };
 
   if (questions.length === 0) {
     return (
-      <div className="glass-panel p-8 rounded-2xl border border-slate-800 text-center space-y-4">
-        <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
-        <h3 className="font-bold text-slate-100">No questions found</h3>
-        <p className="text-xs text-slate-400">This interview session has no questions associated with it.</p>
+      <div className="glass-panel p-8 rounded-signal-lg text-center space-y-4 max-w-md mx-auto">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+        <h3 className="font-display font-bold text-primary">No questions found</h3>
+        <p className="text-[12px] text-secondary">This interview session has no questions associated with it.</p>
         <button onClick={onQuit} className="btn-secondary">Go Back</button>
       </div>
     );
@@ -295,53 +295,53 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
   const currentAnswer = answers[currentQuestion.id] || '';
 
   return (
-    <div className="glass-panel rounded-2xl border border-slate-800 relative overflow-hidden flex flex-col justify-between min-h-[500px]">
+    <div className="glass-panel rounded-signal-lg border border-border relative overflow-hidden flex flex-col justify-between min-h-[550px] shadow-sm">
       {/* Background radial highlight */}
-      <div className="absolute -top-10 -left-10 w-40 h-40 bg-violet-600/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-10 -left-10 w-40 h-40 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Header Info */}
-      <div className="p-6 border-b border-slate-800/80 flex items-center justify-between gap-4 bg-slate-900/10">
+      <div className="p-5 border-b border-border flex items-center justify-between gap-4 bg-white/40">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="px-2 py-0.5 text-[10px] font-semibold bg-violet-600/10 border border-violet-500/20 text-violet-400 rounded-full">
+            <span className="px-2 py-0.5 text-[9px] font-bold bg-accent/5 border border-accent/15 text-accent rounded-full uppercase tracking-wider">
               {interview.role}
             </span>
-            <span className="px-2 py-0.5 text-[10px] font-semibold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
+            <span className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 text-slate-700 rounded-full border border-slate-200 uppercase tracking-wider">
               {interview.difficulty}
             </span>
           </div>
-          <h2 className="text-md font-bold text-slate-100">Interactive Interview Room</h2>
+          <h2 className="font-display text-base font-black tracking-tight text-primary">Interactive Interview Room</h2>
         </div>
 
         <button 
           onClick={onQuit} 
-          className="px-3 py-1.5 rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all duration-200"
+          className="px-3 py-1.5 rounded-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-bold flex items-center gap-1.5 transition-all duration-200"
         >
-          <Square className="w-3 h-3 fill-red-400/20" />
+          <Square className="w-3 h-3 fill-red-600/10" />
           <span>Quit Session</span>
         </button>
       </div>
 
       {/* Progress Indicators */}
       <div className="px-6 pt-4 space-y-3">
-        <div className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider text-secondary">
           <span>Question {currentIdx + 1} of {questions.length}</span>
-          <span className="flex items-center gap-1.5 text-violet-400 font-bold">
+          <span className="flex items-center gap-1 text-accent font-bold">
             <Clock className="w-3.5 h-3.5" />
-            <span>Time Spent: {formatTime(times[currentQuestion.id])}</span>
+            <span className="font-mono">{formatTime(times[currentQuestion.id])}</span>
           </span>
         </div>
         
         {/* Progress bar */}
-        <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-border/20">
           <div 
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 h-full transition-all duration-500 ease-out"
+            className="bg-accent h-full transition-all duration-500 ease-out rounded-full"
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
 
         {/* Bubble Question Pills */}
-        <div className="flex justify-center gap-2 pt-1">
+        <div className="flex justify-center gap-1.5 pt-1">
           {questions.map((q, idx) => {
             const isCompleted = answers[q.id]?.trim().length > 0 && idx !== currentIdx;
             const isActive = idx === currentIdx;
@@ -356,15 +356,15 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
                     if (saved) setCurrentIdx(idx);
                   }
                 }}
-                className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
+                className={`w-7 h-7 rounded-full text-[11px] font-bold flex items-center justify-center transition-all border ${
                   isActive 
-                    ? 'bg-violet-600 border border-violet-500 text-white shadow-lg shadow-violet-600/20 scale-110'
+                    ? 'bg-accent border-accent text-white shadow-sm scale-110'
                     : isCompleted
-                      ? 'bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20'
-                      : 'bg-slate-900 border border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100'
+                      : 'bg-white/10 border-white/20 text-secondary hover:border-white/30 hover:bg-white/20'
                 }`}
               >
-                {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : idx + 1}
+                {isCompleted ? <CheckCircle className="w-3 h-3 text-emerald-600" /> : idx + 1}
               </button>
             );
           })}
@@ -374,19 +374,19 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
       {/* Main Question & Answer Body */}
       <div className="p-6 flex-1 flex flex-col justify-between space-y-6">
         {/* Question Text */}
-        <div className="p-5 rounded-2xl bg-slate-900/30 border border-slate-850/80 shadow-inner flex gap-4 items-start">
-          <div className="p-2 bg-slate-800 text-slate-400 rounded-lg border border-slate-750 font-bold text-sm shrink-0">
+        <div className="p-4.5 rounded-signal-lg bg-white/20 border border-white/30 backdrop-blur-md shadow-inner flex gap-3.5 items-start">
+          <div className="p-2 bg-white/40 text-accent rounded-lg border border-white/50 font-bold text-[12px] shrink-0">
             Q{currentIdx + 1}
           </div>
-          <div className="space-y-1 w-full">
+          <div className="space-y-1 w-full min-w-0">
             {renderQuestionText(currentQuestion.question_text)}
           </div>
         </div>
 
         {/* Speech Dictation / Error Alerts */}
         {speechError && (
-          <div className="p-3 bg-red-950/30 border border-red-500/20 rounded-xl flex items-center gap-2 text-xs text-red-300">
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+          <div className="p-3 bg-red-50/50 backdrop-blur-md border border-red-200 rounded-signal-md flex items-center gap-2 text-[12px] text-red-700">
+            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
             <p>{speechError}</p>
           </div>
         )}
@@ -398,7 +398,7 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
             value={currentAnswer}
             onChange={handleTextChange}
             placeholder="Type your response here. Try to explain your architecture, logic, or step-by-step approach in detail..."
-            className="w-full min-h-[160px] p-4 pr-14 rounded-xl text-sm bg-slate-950 border border-slate-850 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-all leading-relaxed resize-none"
+            className="w-full min-h-[160px] p-4 pr-12 rounded-signal-md text-[13px] bg-white/25 border border-white/35 text-primary placeholder-secondary/40 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all leading-relaxed resize-none shadow-sm"
           />
 
           {/* Glowing Mic button */}
@@ -407,10 +407,10 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
               type="button"
               onClick={toggleRecording}
               disabled={isSubmitting}
-              className={`p-2.5 rounded-full border transition-all ${
+              className={`p-2 rounded-full border transition-all ${
                 isRecording
-                  ? 'bg-red-600 border-red-500 text-white animate-pulse shadow-lg shadow-red-600/30'
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  ? 'bg-red-600 border-red-500 text-white animate-pulse shadow-md shadow-red-600/20'
+                  : 'bg-white/25 border border-white/35 text-secondary hover:text-primary hover:bg-white/40 hover:shadow-sm'
               }`}
               title={isRecording ? 'Stop voice recording' : 'Dictate answer with voice'}
             >
@@ -421,18 +421,18 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
 
         {/* Error notification */}
         {error && (
-          <div className="p-3 bg-red-950/20 border border-red-500/10 rounded-xl text-xs text-red-400 text-center font-medium">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-signal-md text-[12px] text-red-700 text-center font-bold">
             {error}
           </div>
         )}
       </div>
 
       {/* Footer Navigation Buttons */}
-      <div className="p-6 border-t border-slate-800/80 flex items-center justify-between gap-4 bg-slate-900/10">
+      <div className="p-5 border-t border-border flex items-center justify-between gap-4 bg-white/40">
         <button
           onClick={handlePrev}
           disabled={currentIdx === 0 || isSubmitting}
-          className="btn-secondary py-2 px-4 text-xs flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none"
+          className="btn-secondary py-2 px-4 text-[12px] flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Previous</span>
@@ -442,7 +442,7 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
           <button
             onClick={handleNext}
             disabled={isSubmitting}
-            className="btn-primary py-2 px-5 text-xs flex items-center gap-1.5"
+            className="btn-primary py-2 px-5 text-[12px] flex items-center gap-1.5"
           >
             {isSubmitting ? (
               <>
@@ -460,7 +460,7 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
           <button
             onClick={handleSubmitInterview}
             disabled={isSubmitting || isEvaluating}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/15 active:scale-[0.98] transition-all flex items-center gap-1.5"
+            className="px-5 py-2 px-6 rounded-signal-md bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[12px] font-bold shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-60"
           >
             {isEvaluating ? (
               <>

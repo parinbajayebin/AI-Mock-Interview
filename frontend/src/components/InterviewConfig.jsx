@@ -99,32 +99,32 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
   };
 
   return (
-    <div className="glass-panel p-8 rounded-2xl border border-slate-800 relative overflow-hidden h-full flex flex-col justify-between">
+    <div className="glass-panel p-6 rounded-signal-lg relative overflow-hidden h-full flex flex-col justify-between">
       {/* Background radial highlight */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
       
       <div>
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 bg-violet-600/15 text-violet-400 rounded-xl border border-violet-500/25">
+          <div className="p-2 bg-accent/10 text-accent rounded-xl border border-accent/15">
             <Brain className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-slate-100">Setup Mock Interview</h3>
-            <p className="text-slate-400 text-xs mt-0.5">Customize your session difficulty and scope</p>
+            <h3 className="font-display font-bold text-base text-primary">Setup Mock Interview</h3>
+            <p className="text-secondary text-[12px] mt-0.5">Customize your session difficulty and scope</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-950/30 border border-red-500/20 rounded-xl flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-red-300 leading-normal">{error}</p>
+          <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-signal-md flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+            <p className="text-[12px] text-red-700 leading-snug">{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleStartInterview} className="space-y-6">
+        <form onSubmit={handleStartInterview} className="space-y-5">
           {/* Target Role Selector */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted">
               Target Role
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -139,7 +139,7 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
                     setRole(e.target.value);
                   }
                 }}
-                className="col-span-2 md:col-span-1 p-2.5 rounded-lg text-xs bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                className="col-span-2 md:col-span-1 glass-input py-2.5 px-3 rounded-signal-md text-[13px] focus:outline-none"
               >
                 {POPULAR_ROLES.map((r) => (
                   <option key={r} value={r}>{r}</option>
@@ -155,7 +155,7 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
                   value={customRole}
                   onChange={(e) => setCustomRole(e.target.value)}
                   disabled={isGenerating}
-                  className="col-span-2 md:col-span-1 p-2.5 rounded-lg text-xs bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="col-span-2 md:col-span-1 glass-input py-2.5 px-3 rounded-signal-md text-[13px] focus:outline-none"
                 />
               )}
             </div>
@@ -163,7 +163,7 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
 
           {/* Difficulty Tabs */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted">
               Difficulty Level
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -175,32 +175,32 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
                     type="button"
                     disabled={isGenerating}
                     onClick={() => setDifficulty(level.id)}
-                    className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1 ${
+                    className={`py-3 px-2.5 rounded-signal-md border text-center transition-all flex flex-col items-center justify-center gap-1 ${
                       isActive
-                        ? 'bg-violet-600/10 border-violet-500/50 text-violet-300'
-                        : 'bg-slate-900/30 border-slate-850 text-slate-400 hover:border-slate-750 hover:bg-slate-900/50'
+                        ? 'bg-accent/5 border-accent/30 text-accent shadow-sm'
+                        : 'bg-white/10 border-white/20 text-secondary hover:border-white/30 hover:bg-white/20'
                     }`}
                   >
-                    <span className="text-xs font-bold">{level.label}</span>
+                    <span className="text-[12px] font-bold">{level.label}</span>
                   </button>
                 );
               })}
             </div>
-            <p className="text-[10px] text-slate-500 leading-normal mt-1.5">
+            <p className="text-[11px] text-muted leading-normal mt-1.5">
               {DIFFICULTY_LEVELS.find((l) => l.id === difficulty)?.desc}
             </p>
           </div>
 
           {/* Resume Selection */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted">
               Customize with Resume (Optional)
             </label>
             <select
               disabled={isGenerating}
               value={selectedResumeId}
               onChange={(e) => setSelectedResumeId(e.target.value)}
-              className="w-full p-2.5 rounded-lg text-xs bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:ring-1 focus:ring-violet-500"
+              className="w-full glass-input py-2.5 px-3 rounded-signal-md text-[13px] focus:outline-none"
             >
               <option value="">-- No Resume (General Questions) --</option>
               {resumes.map((r) => (
@@ -209,18 +209,18 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
                 </option>
               ))}
             </select>
-            <p className="text-[10px] text-slate-500 leading-normal">
+            <p className="text-[11px] text-muted leading-normal">
               If selected, the AI will build questions based on your projects, certifications, and target skills.
             </p>
           </div>
         </form>
       </div>
 
-      <div className="mt-8 pt-4 border-t border-slate-800/80">
+      <div className="mt-8 pt-4 border-t border-border">
         <button
           onClick={handleStartInterview}
           disabled={isGenerating}
-          className="btn-primary w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold group"
+          className="btn-primary w-full flex items-center justify-center gap-2 py-3 text-[13px] font-bold group"
         >
           {isGenerating ? (
             <>
@@ -238,32 +238,32 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
 
       {/* Loading Overlay */}
       {isGenerating && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
-          <div className="max-w-md w-full glass-panel p-8 rounded-3xl border border-slate-850 text-center space-y-6 shadow-2xl">
-            <div className="relative w-20 h-20 mx-auto">
-              <div className="absolute inset-0 bg-violet-500/20 rounded-full blur-xl pointer-events-none animate-pulse"></div>
-              <div className="w-20 h-20 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin flex items-center justify-center">
-                <Brain className="w-8 h-8 text-violet-400 animate-pulse" />
+        <div className="fixed inset-0 bg-slate-950/30 backdrop-blur-md z-50 flex items-center justify-center p-6">
+          <div className="max-w-[400px] w-full glass-panel p-8 rounded-signal-xl text-center space-y-6 shadow-2xl border border-white/60">
+            <div className="relative w-16 h-16 mx-auto">
+              <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl pointer-events-none animate-pulse"></div>
+              <div className="w-16 h-16 border-4 border-accent/20 border-t-accent rounded-full animate-spin flex items-center justify-center">
+                <Brain className="w-7 h-7 text-accent animate-pulse" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <h4 className="text-lg font-bold text-slate-100">Preparing Mock Interview</h4>
+              <h4 className="font-display text-lg font-bold text-primary">Preparing Mock Interview</h4>
               <div className="h-6 flex items-center justify-center">
-                <p className="text-xs text-slate-400 transition-all duration-300 animate-fade-in font-medium">
+                <p className="text-[13px] text-secondary font-medium animate-pulse">
                   {LOADING_STEPS[loadingStepIndex]}
                 </p>
               </div>
             </div>
 
-            <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-base/80 rounded-full h-1.5 overflow-hidden border border-border/40">
               <div 
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 h-full transition-all duration-1000 ease-out"
+                className="bg-accent h-full transition-all duration-1000 ease-out rounded-full"
                 style={{ width: `${((loadingStepIndex + 1) / LOADING_STEPS.length) * 100}%` }}
               ></div>
             </div>
             
-            <p className="text-[10px] text-slate-500">This will take about 10-15 seconds. Please don't close the window.</p>
+            <p className="text-[10px] text-muted">This will take about 10-15 seconds. Please don't close the window.</p>
           </div>
         </div>
       )}

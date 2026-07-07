@@ -26,10 +26,10 @@ const ProtectedRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 text-sm">Checking active session...</p>
+          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-secondary text-sm">Checking active session...</p>
         </div>
       </div>
     );
@@ -109,401 +109,398 @@ const Dashboard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-animate-gradient flex flex-col">
-      {/* Navigation Header */}
-      <header className="border-b border-slate-800 bg-slate-900/40 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-violet-600/10 rounded-lg text-violet-400 border border-violet-500/20">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <span className="font-bold tracking-tight text-lg text-white">AI Mock Interview Platform</span>
-        </div>
-        
-        <button onClick={logout} className="btn-secondary flex items-center gap-2 py-2 px-3 text-sm">
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
-        </button>
-      </header>
+    <div className="min-h-screen bg-transparent relative flex flex-col md:flex-row">
+      {/* ── Background decoration matching Auth screens ── */}
+      <div className="fixed top-[15%] left-[12%] w-80 h-80 bg-teal-400/5 rounded-full blur-3xl animate-float pointer-events-none z-0" />
+      <div className="fixed bottom-[20%] right-[15%] w-[450px] h-[450px] bg-blue-400/5 rounded-full blur-3xl animate-float pointer-events-none z-0" style={{ animationDelay: '-3s' }} />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-12">
-        {/* User Card */}
-        <div className="glass-panel p-8 rounded-2xl border border-slate-800 mb-8">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
-            Hello, {user.full_name}!
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Authentication successfully configured. Here are your account profile details:
-          </p>
+      {/* ── Sidebar Navigation (hidden during active sessions for focus mode) ── */}
+      {!activeInterview && !completedInterviewId && (
+        <aside className="w-full md:w-72 shrink-0 glass-panel md:min-h-screen sticky top-0 z-10 flex flex-col justify-between p-6 border-b md:border-b-0 md:border-r border-border">
+          <div className="space-y-6">
+            {/* Logo */}
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-sm">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-display font-bold tracking-tight text-[16px] text-primary">InterviewSignal</span>
+            </div>
+
+            {/* Profile Info */}
+            <div className="bg-base/50 border border-border/80 rounded-signal-lg p-3.5 relative overflow-hidden transition-all hover:bg-base/70">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-display font-bold text-sm shrink-0">
+                  {user.full_name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight">{user.full_name}</h4>
+                  <p className="text-[11px] text-muted truncate mt-0.5">{user.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nav Tabs */}
+            <nav className="space-y-1">
+              {[
+                { key: 'resumes', icon: FileText, label: 'Your Resumes' },
+                { key: 'interview', icon: Brain, label: 'Interview Room' },
+                { key: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
+                { key: 'history', icon: History, label: 'Interview History' },
+              ].map(({ key, icon: Icon, label }) => {
+                const isActive = activeTab === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${
+                      isActive
+                        ? 'bg-accent/5 border-accent/20 text-accent shadow-sm'
+                        : 'bg-transparent border-transparent text-secondary hover:bg-base/50 hover:text-primary hover:border-border'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Logout button */}
+          <div className="pt-4 mt-6 border-t border-border/60">
+            <button onClick={logout} className="w-full btn-secondary flex items-center justify-center gap-2 py-2 px-3 text-[13px] group">
+              <LogOut className="w-4 h-4 text-secondary group-hover:text-primary transition-colors" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* ── Main Content Area ── */}
+      <main className="flex-1 min-w-0 relative z-10 flex flex-col">
+        {/* Full-width container when focusing, else padded container */}
+        <div className={`flex-1 w-full mx-auto ${activeInterview || completedInterviewId ? 'p-0' : 'max-w-6xl px-6 md:px-8 py-8 md:py-10'}`}>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-            <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800/80 flex items-center gap-3">
-              <Mail className="w-5 h-5 text-violet-400" />
-              <div>
-                <span className="block text-xs text-slate-500 uppercase font-semibold">Email</span>
-                <span className="text-sm font-medium text-slate-200">{user.email}</span>
+          {/* Ongoing Session Banner */}
+          {ongoingInterview && !activeInterview && !completedInterviewId && (
+            <div className="glass-panel p-4.5 rounded-signal-lg mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up border-l-4 border-l-accent shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-accent/10 text-accent rounded-xl">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-display font-bold text-primary text-[14px]">Ongoing Interview Session</h3>
+                  <p className="text-[12px] text-secondary mt-0.5">
+                    You have an unfinished {ongoingInterview.difficulty} {ongoingInterview.role} interview.
+                  </p>
+                </div>
               </div>
-            </div>
-            
-            <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800/80 flex items-center gap-3">
-              <ShieldCheck className="w-5 h-5 text-violet-400" />
-              <div>
-                <span className="block text-xs text-slate-500 uppercase font-semibold">Login Provider</span>
-                <span className="text-sm font-medium text-slate-200 capitalize">{user.auth_provider}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Unfinished Interview Banner */}
-        {ongoingInterview && !activeInterview && !completedInterviewId && (
-          <div className="glass-panel p-6 rounded-2xl border border-violet-500/30 bg-violet-950/10 mb-8 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in relative overflow-hidden">
-            <div className="absolute -top-10 -left-10 w-24 h-24 bg-violet-600/10 rounded-full blur-2xl pointer-events-none"></div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-violet-600/20 text-violet-400 rounded-xl border border-violet-500/30 animate-pulse">
-                <Brain className="w-6 h-6" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-bold text-slate-100 text-sm md:text-base">Ongoing Interview Session</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  You have an unfinished {ongoingInterview.difficulty} {ongoingInterview.role} interview.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 shrink-0 w-full md:w-auto">
-              <button
-                onClick={() => {
-                  setActiveInterview(ongoingInterview);
-                  setOngoingInterview(null);
-                }}
-                className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-violet-600/15"
-              >
-                Resume Session
-              </button>
-              <button
-                onClick={async () => {
-                  if (window.confirm("Are you sure you want to discard this session? All answered questions will be deleted permanently.")) {
-                    try {
-                      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/interviews/${ongoingInterview.id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                      });
-                      if (res.ok) {
-                        setOngoingInterview(null);
+              <div className="flex gap-2.5 shrink-0 w-full md:w-auto">
+                <button
+                  onClick={() => {
+                    setActiveInterview(ongoingInterview);
+                    setOngoingInterview(null);
+                  }}
+                  className="flex-1 md:flex-none btn-primary px-3.5 py-2 text-[12px]"
+                >
+                  Resume Session
+                </button>
+                <button
+                  onClick={async () => {
+                    if (window.confirm("Are you sure you want to discard this session? All answered questions will be deleted permanently.")) {
+                      try {
+                        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/interviews/${ongoingInterview.id}`, {
+                          method: 'DELETE',
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (res.ok) {
+                          setOngoingInterview(null);
+                        }
+                      } catch (e) {
+                        console.error("Failed to delete interview:", e);
                       }
-                    } catch (e) {
-                      console.error("Failed to delete interview:", e);
                     }
+                  }}
+                  className="flex-1 md:flex-none btn-secondary px-3.5 py-2 text-[12px]"
+                >
+                  Discard
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Action Modules Router */}
+          {completedInterviewId ? (
+            <div className="p-6 md:p-10 max-w-5xl mx-auto">
+              <EvaluationReport 
+                interviewId={completedInterviewId} 
+                token={token}
+                onBackToDashboard={() => {
+                  setCompletedInterviewId(null);
+                  setActiveTab('resumes');
+                }} 
+              />
+            </div>
+          ) : activeInterview ? (
+            <div className="min-h-screen">
+              <ActiveInterview 
+                interview={activeInterview}
+                token={token}
+                onInterviewFinished={(interviewId) => {
+                  setCompletedInterviewId(interviewId);
+                  setActiveInterview(null);
+                }}
+                onQuit={() => {
+                  if (window.confirm("Are you sure you want to quit? Your active session progress will be lost.")) {
+                    setActiveInterview(null);
                   }
                 }}
-                className="flex-1 md:flex-none px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-lg text-xs font-semibold transition-all"
-              >
-                Discard
-              </button>
+              />
             </div>
-          </div>
-        )}
-
-        {/* Navigation Tabs */}
-        {!activeInterview && !completedInterviewId && (
-          <div className="flex gap-2 border-b border-slate-800 pb-4 mb-8">
-            <button
-              onClick={() => setActiveTab('resumes')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
-                activeTab === 'resumes'
-                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
-                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Resume Analytics</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('interview')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
-                activeTab === 'interview'
-                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
-                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Brain className="w-3.5 h-3.5" />
-              <span>Interview Prep</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
-                activeTab === 'analytics'
-                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
-                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Performance Analytics</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all border ${
-                activeTab === 'history'
-                  ? 'bg-violet-600/10 border-violet-500/30 text-violet-400'
-                  : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>Interview History</span>
-            </button>
-          </div>
-        )}
-
-        {/* Action Modules */}
-        {completedInterviewId ? (
-          <EvaluationReport 
-            interviewId={completedInterviewId} 
-            token={token}
-            onBackToDashboard={() => {
-              setCompletedInterviewId(null);
-              setActiveTab('resumes');
-            }} 
-          />
-        ) : activeInterview ? (
-          <ActiveInterview 
-            interview={activeInterview}
-            token={token}
-            onInterviewFinished={(interviewId) => {
-              setCompletedInterviewId(interviewId);
-              setActiveInterview(null);
-            }}
-            onQuit={() => {
-              if (window.confirm("Are you sure you want to quit? Your active session progress will be lost.")) {
-                setActiveInterview(null);
-              }
-            }}
-          />
-        ) : activeTab === 'resumes' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column: Upload & List (5 cols) */}
-            <div className="lg:col-span-5 space-y-6">
-              <ResumeUpload onUploadSuccess={handleUploadSuccess} />
-              
-              <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-                <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-violet-400" />
-                  <span>Your Resumes</span>
-                </h3>
-                
-                {isLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-                  </div>
-                ) : resumes.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-6">No resumes uploaded yet.</p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {resumes.map(r => {
-                      const isSelected = selectedResume?.id === r.id;
-                      return (
-                        <button
-                          key={r.id}
-                          onClick={() => setSelectedResume(r)}
-                          className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col gap-1 ${
-                            isSelected
-                              ? 'bg-violet-600/10 border-violet-500/50 shadow-indigo-500/5'
-                              : 'bg-slate-900/30 border-slate-800/80 hover:bg-slate-900/50 hover:border-slate-700'
-                          }`}
-                        >
-                          <span className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? 'text-violet-400' : 'text-slate-500'}`}>
-                            {new Date(r.uploaded_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
-                          </span>
-                          <span className="text-sm font-medium text-slate-200 truncate w-full">{r.file_name}</span>
-                          {r.skills && r.skills.length > 0 && (
-                            <span className="text-[10px] text-slate-500 truncate w-full">
-                              {r.skills.length} skills extracted
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+          ) : activeTab === 'resumes' ? (
+            <div className="space-y-6">
+              {/* Header section inside content */}
+              <div>
+                <h1 className="font-display text-2xl font-black tracking-tight text-primary">Resume Parsing & Skills</h1>
+                <p className="text-[13px] text-secondary mt-1">Upload and analyze your tech resumes for tailored interview generation</p>
               </div>
-            </div>
 
-            {/* Right Column: AI Analysis details (7 cols) */}
-            <div className="lg:col-span-7">
-              {selectedResume ? (
-                <div className="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
-                  {/* Header */}
-                  <div className="border-b border-slate-800/80 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-green-500/10 border border-green-500/20 text-green-400 rounded-full">
-                          AI Parsed
-                        </span>
-                        {selectedResume.parsed_metadata?.experience_years !== undefined && (
-                          <span className="px-2 py-0.5 text-[10px] font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full">
-                            {selectedResume.parsed_metadata.experience_years} Years Exp
-                          </span>
-                        )}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left Column: Upload & List (5 cols) */}
+                <div className="lg:col-span-5 space-y-6">
+                  <ResumeUpload onUploadSuccess={handleUploadSuccess} />
+                  
+                  <div className="glass-panel p-5 rounded-signal-lg">
+                    <h3 className="font-display font-semibold text-primary mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-accent" />
+                      <span>Your Resumes</span>
+                    </h3>
+                    
+                    {isLoading ? (
+                      <div className="flex justify-center py-6">
+                        <Loader2 className="w-5 h-5 animate-spin text-accent" />
                       </div>
-                      <h2 className="text-xl font-bold text-slate-100 truncate max-w-[320px]">{selectedResume.file_name}</h2>
-                    </div>
-                  </div>
-
-                  {/* Summary */}
-                  {selectedResume.experience_summary && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Career Summary
-                      </h4>
-                      <div className="p-4 bg-slate-900/40 border border-slate-800 rounded-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-3 opacity-5">
-                          <Sparkles className="w-12 h-12 text-violet-400" />
-                        </div>
-                        <p className="text-sm text-slate-300 leading-relaxed relative z-10">
-                          {selectedResume.experience_summary}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Skills */}
-                  {selectedResume.skills && selectedResume.skills.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Key Skills ({selectedResume.skills.length})
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedResume.skills.map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-violet-600/10 border border-violet-500/20 text-violet-300 rounded-full text-xs font-medium hover:border-violet-500/40 transition-colors"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Education and Contact Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-800/80 pt-6">
-                    {/* Education & Certs */}
-                    <div className="space-y-4">
-                      {selectedResume.parsed_metadata?.education && selectedResume.parsed_metadata.education.length > 0 ? (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            Education
-                          </h4>
-                          <div className="space-y-2">
-                            {selectedResume.parsed_metadata.education.map((edu, idx) => (
-                              <div key={idx} className="text-xs">
-                                <p className="font-semibold text-slate-300">
-                                  {edu.degree} {edu.field_of_study ? `in ${edu.field_of_study}` : ''}
-                                </p>
-                                <p className="text-slate-500">
-                                  {edu.school} {edu.graduation_year ? `(${edu.graduation_year})` : ''}
-                                </p>
+                    ) : resumes.length === 0 ? (
+                      <p className="text-muted text-[12px] text-center py-6">No resumes uploaded yet.</p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-[250px] overflow-y-auto pr-1">
+                        {resumes.map(r => {
+                          const isSelected = selectedResume?.id === r.id;
+                          return (
+                            <button
+                              key={r.id}
+                              onClick={() => setSelectedResume(r)}
+                              className={`w-full text-left p-3 rounded-signal-md border transition-all duration-200 flex flex-col gap-1.5 ${
+                                isSelected
+                                  ? 'bg-accent/5 border-accent/30 shadow-sm'
+                                  : 'bg-white/10 border-white/20 hover:bg-white/25 hover:shadow-sm hover:border-white/35'
+                              }`}
+                            >
+                              <div className="flex justify-between items-center w-full">
+                                <span className={`text-[9px] font-bold uppercase tracking-wider ${isSelected ? 'text-accent' : 'text-muted'}`}>
+                                  {new Date(r.uploaded_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
+                                </span>
+                                {r.skills && r.skills.length > 0 && (
+                                  <span className="px-1.5 py-0.5 bg-accent/10 border border-accent/15 rounded-full text-[9px] font-semibold text-accent">
+                                    {r.skills.length} Skills
+                                  </span>
+                                )}
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {selectedResume.parsed_metadata?.certifications && selectedResume.parsed_metadata.certifications.length > 0 ? (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            Certifications
-                          </h4>
-                          <ul className="list-disc list-inside text-xs text-slate-400 space-y-1">
-                            {selectedResume.parsed_metadata.certifications.map((cert, idx) => (
-                              <li key={idx}>{cert}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {/* Contact Info */}
-                    {selectedResume.parsed_metadata?.contact_info && (
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                          Contact & Links
-                        </h4>
-                        <div className="space-y-2 text-xs">
-                          {selectedResume.parsed_metadata.contact_info.email && (
-                            <div className="flex items-center gap-2 text-slate-400">
-                              <Mail className="w-3.5 h-3.5 text-violet-400" />
-                              <span>{selectedResume.parsed_metadata.contact_info.email}</span>
-                            </div>
-                          )}
-                          {selectedResume.parsed_metadata.contact_info.phone && (
-                            <div className="flex items-center gap-2 text-slate-400">
-                              <Phone className="w-3.5 h-3.5 text-violet-400" />
-                              <span>{selectedResume.parsed_metadata.contact_info.phone}</span>
-                            </div>
-                          )}
-                          {selectedResume.parsed_metadata.contact_info.linkedin && (
-                            <div className="flex items-center gap-2 text-slate-400">
-                              <Linkedin className="w-3.5 h-3.5 text-violet-400" />
-                              <a
-                                href={selectedResume.parsed_metadata.contact_info.linkedin.startsWith('http') ? selectedResume.parsed_metadata.contact_info.linkedin : `https://${selectedResume.parsed_metadata.contact_info.linkedin}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="hover:text-violet-300 underline transition-colors"
-                              >
-                                LinkedIn
-                              </a>
-                            </div>
-                          )}
-                          {selectedResume.parsed_metadata.contact_info.website && (
-                            <div className="flex items-center gap-2 text-slate-400">
-                              <Globe className="w-3.5 h-3.5 text-violet-400" />
-                              <a
-                                href={selectedResume.parsed_metadata.contact_info.website.startsWith('http') ? selectedResume.parsed_metadata.contact_info.website : `https://${selectedResume.parsed_metadata.contact_info.website}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="hover:text-violet-300 underline transition-colors"
-                              >
-                                Portfolio Website
-                              </a>
-                            </div>
-                          )}
-                        </div>
+                              <span className="text-[13px] font-semibold text-primary truncate w-full">{r.file_name}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
                 </div>
-              ) : (
-                <div className="glass-panel p-8 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center h-[350px] opacity-75">
-                  <FileText className="w-16 h-16 text-slate-700 mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-400">No Resume Selected</h3>
-                  <p className="text-xs text-slate-500 max-w-[280px] mt-2">
-                    Upload a PDF resume on the left or select an existing one to view its AI skillset analysis and metadata.
-                  </p>
+
+                {/* Right Column: AI Analysis details (7 cols) */}
+                <div className="lg:col-span-7">
+                  {selectedResume ? (
+                    <div className="glass-panel p-6 rounded-signal-lg space-y-5">
+                      {/* Header */}
+                      <div className="border-b border-border pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="px-2 py-0.5 text-[9px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full uppercase tracking-wider">
+                              AI Parsed
+                            </span>
+                            {selectedResume.parsed_metadata?.experience_years !== undefined && (
+                              <span className="px-2 py-0.5 text-[9px] font-bold bg-accent/5 border border-accent/20 text-accent rounded-full uppercase tracking-wider">
+                                {selectedResume.parsed_metadata.experience_years} Years Exp
+                              </span>
+                            )}
+                          </div>
+                          <h2 className="font-display text-lg font-bold text-primary truncate max-w-[320px]">{selectedResume.file_name}</h2>
+                        </div>
+                      </div>
+
+                      {/* Summary */}
+                      {selectedResume.experience_summary && (
+                        <div className="space-y-1.5">
+                          <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted">
+                            Career Summary
+                          </h4>
+                          <div className="p-3.5 bg-white/20 border border-white/30 rounded-signal-md">
+                            <p className="text-[13px] text-secondary leading-relaxed">
+                              {selectedResume.experience_summary}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Skills */}
+                      {selectedResume.skills && selectedResume.skills.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted">
+                            Key Skills ({selectedResume.skills.length})
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedResume.skills.map((skill, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2.5 py-1 bg-accent/5 border border-accent/15 text-accent rounded-full text-[11px] font-semibold hover:bg-accent/10 transition-colors"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Education and Contact Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-border pt-4">
+                        {/* Education & Certs */}
+                        <div className="space-y-4">
+                          {selectedResume.parsed_metadata?.education && selectedResume.parsed_metadata.education.length > 0 ? (
+                            <div className="space-y-1.5">
+                              <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted">Education</h4>
+                              <div className="space-y-2">
+                                {selectedResume.parsed_metadata.education.map((edu, idx) => (
+                                  <div key={idx} className="text-[12px]">
+                                    <p className="font-bold text-primary">
+                                      {edu.degree} {edu.field_of_study ? `in ${edu.field_of_study}` : ''}
+                                    </p>
+                                    <p className="text-secondary text-[11px]">
+                                      {edu.school} {edu.graduation_year ? `(${edu.graduation_year})` : ''}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {selectedResume.parsed_metadata?.certifications && selectedResume.parsed_metadata.certifications.length > 0 ? (
+                            <div className="space-y-1.5">
+                              <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted">Certifications</h4>
+                              <ul className="list-disc list-inside text-[12px] text-secondary space-y-1">
+                                {selectedResume.parsed_metadata.certifications.map((cert, idx) => (
+                                  <li key={idx} className="truncate">{cert}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        {/* Contact Info */}
+                        {selectedResume.parsed_metadata?.contact_info && (
+                          <div className="space-y-2.5">
+                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted">Contact & Links</h4>
+                            <div className="space-y-2 text-[12px]">
+                              {selectedResume.parsed_metadata.contact_info.email && (
+                                <div className="flex items-center gap-2 text-secondary">
+                                  <Mail className="w-3.5 h-3.5 text-accent shrink-0" />
+                                  <span className="truncate">{selectedResume.parsed_metadata.contact_info.email}</span>
+                                </div>
+                              )}
+                              {selectedResume.parsed_metadata.contact_info.phone && (
+                                <div className="flex items-center gap-2 text-secondary">
+                                  <Phone className="w-3.5 h-3.5 text-accent shrink-0" />
+                                  <span>{selectedResume.parsed_metadata.contact_info.phone}</span>
+                                </div>
+                              )}
+                              {selectedResume.parsed_metadata.contact_info.linkedin && (
+                                <div className="flex items-center gap-2 text-secondary">
+                                  <Linkedin className="w-3.5 h-3.5 text-accent shrink-0" />
+                                  <a
+                                    href={selectedResume.parsed_metadata.contact_info.linkedin.startsWith('http') ? selectedResume.parsed_metadata.contact_info.linkedin : `https://${selectedResume.parsed_metadata.contact_info.linkedin}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:text-accent underline underline-offset-2 transition-colors truncate"
+                                  >
+                                    LinkedIn
+                                  </a>
+                                </div>
+                              )}
+                              {selectedResume.parsed_metadata.contact_info.website && (
+                                <div className="flex items-center gap-2 text-secondary">
+                                  <Globe className="w-3.5 h-3.5 text-accent shrink-0" />
+                                  <a
+                                    href={selectedResume.parsed_metadata.contact_info.website.startsWith('http') ? selectedResume.parsed_metadata.contact_info.website : `https://${selectedResume.parsed_metadata.contact_info.website}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:text-accent underline underline-offset-2 transition-colors truncate"
+                                  >
+                                    Portfolio
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="glass-panel p-6 rounded-signal-lg flex flex-col items-center justify-center text-center h-[320px]">
+                      <FileText className="w-12 h-12 text-muted/40 mb-3" />
+                      <h3 className="font-display text-md font-bold text-secondary">No Resume Selected</h3>
+                      <p className="text-[12px] text-muted max-w-[260px] mt-1.5 leading-relaxed">
+                        Upload a PDF resume or select one to view its AI analysis.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        ) : activeTab === 'analytics' ? (
-          <PerformanceAnalytics 
-            token={token} 
-            onStartInterview={() => setActiveTab('interview')} 
-          />
-        ) : activeTab === 'history' ? (
-          <InterviewHistory 
-            token={token}
-            onResumeInterview={(interview) => setActiveInterview(interview)}
-            onViewReport={(id) => setCompletedInterviewId(id)}
-            onStartNew={() => setActiveTab('interview')}
-          />
-        ) : (
-          <div className="max-w-2xl mx-auto">
-            <InterviewConfig 
-              resumes={resumes} 
-              token={token} 
-              onInterviewStarted={(interview) => setActiveInterview(interview)} 
-            />
-          </div>
-        )}
+          ) : activeTab === 'analytics' ? (
+            <div className="space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-black tracking-tight text-primary">Performance Analytics</h1>
+                <p className="text-[13px] text-secondary mt-1">Track your progress and readiness metrics across categories</p>
+              </div>
+              <PerformanceAnalytics 
+                token={token} 
+                onStartInterview={() => setActiveTab('interview')} 
+              />
+            </div>
+          ) : activeTab === 'history' ? (
+            <div className="space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-black tracking-tight text-primary">Interview History</h1>
+                <p className="text-[13px] text-secondary mt-1">Review your completed mock sessions and grading transcripts</p>
+              </div>
+              <InterviewHistory 
+                token={token}
+                onResumeInterview={(interview) => setActiveInterview(interview)}
+                onViewReport={(id) => setCompletedInterviewId(id)}
+                onStartNew={() => setActiveTab('interview')}
+              />
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto space-y-6 py-4">
+              <div className="text-center">
+                <h1 className="font-display text-3xl font-black tracking-tight text-primary">Setup Interview Room</h1>
+                <p className="text-[13px] text-secondary mt-1.5">Configure your target role and difficulty for your AI interviewer</p>
+              </div>
+              <InterviewConfig 
+                resumes={resumes} 
+                token={token} 
+                onInterviewStarted={(interview) => setActiveInterview(interview)} 
+              />
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
@@ -522,7 +519,6 @@ export default function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
-          {/* Fallback routing redirection */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
