@@ -115,7 +115,7 @@ export default function EvaluationReport({ interviewId, token, onBackToDashboard
                   Q{idx + 1}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-bold text-primary leading-relaxed">{q.question_text}</p>
+                  <p style={{ color: '#0f172a' }} className="text-[13px] font-bold leading-relaxed">{q.question_text}</p>
                   <div className="flex flex-wrap gap-1.5 mt-2.5">
                     {q.expected_skills.map((skill, sIdx) => (
                       <span key={sIdx} className="px-2 py-0.5 rounded bg-white/25 border border-white/35 text-secondary text-[10px] font-semibold">

@@ -276,7 +276,7 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
           </pre>
         );
       }
-      return <p key={index} className="text-primary text-sm md:text-base leading-relaxed whitespace-pre-line">{part}</p>;
+      return <p key={index} style={{ color: '#0f172a' }} className="font-semibold text-sm md:text-base leading-relaxed whitespace-pre-line">{part}</p>;
     });
   };
 
