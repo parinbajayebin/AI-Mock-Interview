@@ -60,3 +60,27 @@ async def list_resumes(
     resumes = await repo.get_by_user_id(current_user.id)
     return resumes
 
+@router.delete("/{resume_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_resume(
+    resume_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ResumeRepository(db)
+    resume = await repo.get_by_id(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if resume.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this resume")
+
+    # Delete from storage
+    try:
+        from app.services.resume_service import delete_resume_from_storage
+        await delete_resume_from_storage(resume.file_path)
+    except Exception as e:
+        print(f"Warning: could not delete file from storage: {e}")
+
+    await repo.delete(resume)
+    return
+
+

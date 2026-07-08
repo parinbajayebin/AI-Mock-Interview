@@ -42,3 +42,14 @@ async def upload_resume_to_storage(user_id: uuid.UUID, file_name: str, file_byte
             raise HTTPException(status_code=500, detail=f"Failed to upload resume to storage: {str(e)}")
             
     return await asyncio.to_thread(_upload)
+
+async def delete_resume_from_storage(file_path: str) -> None:
+    """Deletes a resume from Supabase Storage."""
+    def _delete():
+        try:
+            supabase.storage.from_("resumes").remove([file_path])
+        except Exception as e:
+            print(f"Failed to delete resume from storage: {str(e)}")
+            
+    await asyncio.to_thread(_delete)
+

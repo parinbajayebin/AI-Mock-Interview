@@ -17,7 +17,8 @@ import {
   Phone, 
   Linkedin, 
   Globe, 
-  CheckCircle2 
+  CheckCircle2,
+  Trash2
 } from 'lucide-react';
 
 // Protected Route Guard Component
@@ -107,6 +108,39 @@ const Dashboard = () => {
   const handleUploadSuccess = (newResume) => {
     setResumes(prev => [newResume, ...prev]);
     setSelectedResume(newResume);
+  };
+
+  const handleDeleteResume = async (resumeId) => {
+    if (!window.confirm("Are you sure you want to delete this resume? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/resumes/${resumeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Failed to delete resume');
+      }
+
+      // Update state
+      setResumes(prev => {
+        const updated = prev.filter(r => r.id !== resumeId);
+        // If we deleted the currently selected resume, select the first one of the updated list
+        if (selectedResume?.id === resumeId) {
+          setSelectedResume(updated.length > 0 ? updated[0] : null);
+        }
+        return updated;
+      });
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Error deleting resume');
+    }
   };
   
   return (
@@ -403,9 +437,8 @@ const Dashboard = () => {
                 <div className="lg:col-span-7">
                   {selectedResume ? (
                     <div className="glass-panel p-6 rounded-signal-lg space-y-5">
-                      {/* Header */}
                       <div className="border-b border-border pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="px-2 py-0.5 text-[9px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full uppercase tracking-wider">
                               AI Parsed
@@ -418,6 +451,13 @@ const Dashboard = () => {
                           </div>
                           <h2 className="font-display text-lg font-bold text-primary truncate max-w-[320px]">{selectedResume.file_name}</h2>
                         </div>
+                        <button
+                          onClick={() => handleDeleteResume(selectedResume.id)}
+                          className="px-3 py-1.5 rounded-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-bold flex items-center gap-1.5 transition-all duration-200 shrink-0 self-start md:self-auto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete Resume</span>
+                        </button>
                       </div>
 
                       {/* Summary */}

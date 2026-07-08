@@ -42,3 +42,8 @@ class ResumeRepository:
             select(Resume).where(Resume.id == resume_id)
         )
         return result.scalars().first()
+
+    async def delete(self, resume: Resume) -> None:
+        await self.session.delete(resume)
+        await self.session.commit()
+
