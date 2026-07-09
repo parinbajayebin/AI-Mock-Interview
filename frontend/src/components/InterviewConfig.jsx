@@ -36,10 +36,15 @@ export default function InterviewConfig({ resumes, token, onInterviewStarted }) 
   const [loadingStepIndex, setLoadingStepIndex] = React.useState(0);
   const [error, setError] = React.useState(null);
 
-  // Set default resume if available
+  const hasSetDefaultRef = React.useRef(false);
+
+  // Set default resume if available and handle updates/deletions
   React.useEffect(() => {
-    if (resumes && resumes.length > 0 && !selectedResumeId) {
+    if (selectedResumeId && resumes && !resumes.some(r => r.id === selectedResumeId)) {
+      setSelectedResumeId(resumes.length > 0 ? resumes[0].id : '');
+    } else if (resumes && resumes.length > 0 && !selectedResumeId && !hasSetDefaultRef.current) {
       setSelectedResumeId(resumes[0].id);
+      hasSetDefaultRef.current = true;
     }
   }, [resumes, selectedResumeId]);
 
