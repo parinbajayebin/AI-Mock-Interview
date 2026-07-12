@@ -570,6 +570,7 @@ const Dashboard = () => {
   const [byokOpenRouterKey, setByokOpenRouterKey] = React.useState('');
   const [byokModel, setByokModel] = React.useState('');
   const [guideOpen, setGuideOpen] = React.useState(false);
+  const [byokIntroDismissed, setByokIntroDismissed] = React.useState(false);
 
   React.useEffect(() => {
     if (user?.id) {
@@ -580,6 +581,7 @@ const Dashboard = () => {
       setByokGroqKey(localStorage.getItem(`byok_groq_key_${suffix}`) || localStorage.getItem('byok_groq_key') || '');
       setByokOpenRouterKey(localStorage.getItem(`byok_openrouter_key_${suffix}`) || localStorage.getItem('byok_openrouter_key') || '');
       setByokModel(localStorage.getItem(`byok_model_${suffix}`) || localStorage.getItem('byok_model') || '');
+      setByokIntroDismissed(localStorage.getItem(`byok_intro_dismissed_${suffix}`) === 'true');
     }
   }, [user]);
 
@@ -1210,6 +1212,50 @@ const Dashboard = () => {
         isOpen={guideOpen} 
         onClose={() => setGuideOpen(false)} 
       />
+
+      {/* Mobile BYOK Feature Alert Toast */}
+      {!byokIntroDismissed && byokProvider === 'default' && (
+        <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden bg-white/95 backdrop-blur-xl border border-teal-200/80 p-4 rounded-signal-xl shadow-[0_8px_32px_rgba(20,184,166,0.15)] flex gap-3 items-start animate-slide-up">
+          <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 shrink-0">
+            <Sparkles className="w-4.5 h-4.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-display font-bold text-xs text-slate-900 text-left">Unlock Unlimited Mock Interviews</h4>
+            <p className="text-[10.5px] text-slate-600 mt-1 leading-normal text-left">
+              Already have an API Key? Configure Gemini, OpenAI, Groq, or OpenRouter to unlock unlimited practice sessions.
+            </p>
+            <div className="flex gap-2.5 mt-2.5">
+              <button 
+                onClick={() => {
+                  setMobileMenuOpen(true);
+                  const suffix = user?.id || 'default';
+                  setByokIntroDismissed(true);
+                  localStorage.setItem(`byok_intro_dismissed_${suffix}`, 'true');
+                }} 
+                className="text-[10px] font-bold text-accent hover:text-accent-secondary flex items-center gap-0.5"
+              >
+                Configure Now →
+              </button>
+              <button 
+                onClick={() => setGuideOpen(true)} 
+                className="text-[10px] font-bold text-slate-500 hover:text-slate-700"
+              >
+                Get Free Keys
+              </button>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              const suffix = user?.id || 'default';
+              setByokIntroDismissed(true);
+              localStorage.setItem(`byok_intro_dismissed_${suffix}`, 'true');
+            }}
+            className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
