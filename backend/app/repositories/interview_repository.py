@@ -97,3 +97,11 @@ class InterviewRepository:
         )
         result = await self.db.execute(query)
         return list(result.scalars().all())
+
+    async def count_user_interviews(self, user_id: uuid.UUID) -> int:
+        """
+        Counts the total number of interviews created by a user.
+        """
+        query = select(Interview).where(Interview.user_id == user_id)
+        result = await self.db.execute(query)
+        return len(result.scalars().all())

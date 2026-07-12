@@ -11,6 +11,8 @@ from app.auth.routes import get_current_user
 from app.models.user import User
 
 from app.services.ai_service import analyze_resume_text
+from app.core.dependencies import get_byok_keys
+from app.schemas.byok import UserAPIKeys
 
 router = APIRouter(prefix="/resumes", tags=["Resumes"])
 
@@ -18,7 +20,8 @@ router = APIRouter(prefix="/resumes", tags=["Resumes"])
 async def upload_resume(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_keys: UserAPIKeys = Depends(get_byok_keys)
 ):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
@@ -34,8 +37,8 @@ async def upload_resume(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse PDF text: {str(e)}")
 
-    # 3. Analyze text using Gemini 3.5 Flash
-    analysis = await analyze_resume_text(raw_text)
+    # 3. Analyze text using Gemini 3.5 Flash / OpenAI
+    analysis = await analyze_resume_text(raw_text, user_keys=user_keys)
 
     # 4. Create database entry with parsed AI features
     repo = ResumeRepository(db)

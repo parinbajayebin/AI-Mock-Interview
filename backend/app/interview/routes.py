@@ -12,19 +12,66 @@ from app.repositories.response_repository import ResponseRepository
 from app.services.ai_service import generate_interview_questions, evaluate_interview_responses
 from app.auth.routes import get_current_user
 from app.models.user import User
+from app.core.dependencies import get_byok_keys
+from app.schemas.byok import UserAPIKeys
 
 router = APIRouter(prefix="/interviews", tags=["Interviews"])
+
+@router.post("/validate-key")
+async def validate_byok_key(
+    user_keys: UserAPIKeys = Depends(get_byok_keys),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Validates if the user-supplied API key is legitimate by making a micro test request to the specified provider.
+    """
+    if user_keys.provider == "default":
+        return {"valid": True, "message": "Using Host Credits"}
+        
+    # Import locally to avoid circular dependencies
+    from app.services.ai_service import _call_llm_json
+    
+    test_prompt = "Respond with a single JSON containing key 'status' and value 'ok'"
+    system_instruction = "You are a test validator. You must output valid JSON."
+    
+    try:
+        res = await _call_llm_json(
+            prompt=test_prompt,
+            system_instruction=system_instruction,
+            user_keys=user_keys
+        )
+        if res and isinstance(res, dict) and "status" in res:
+            return {"valid": True, "message": f"Successfully verified {user_keys.provider} API key"}
+        else:
+            raise ValueError("Provider did not return expected response structure")
+    except Exception as e:
+        error_msg = str(e)
+        raise HTTPException(
+            status_code=400,
+            detail=error_msg
+        )
 
 @router.post("", response_model=InterviewResponse, status_code=status.HTTP_201_CREATED)
 async def create_interview(
     payload: InterviewCreate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_keys: UserAPIKeys = Depends(get_byok_keys)
 ):
     """
-    Creates a new mock interview session, invokes Gemini to generate 5 questions,
+    Creates a new mock interview session, invokes Gemini/OpenAI to generate 5 questions,
     and stores both the interview and the questions in the database.
     """
+    # 1. Check if user is using host's key and has exceeded the free limit of 2 interviews
+    interview_repo = InterviewRepository(db)
+    if user_keys.provider == "default":
+        usage_count = await interview_repo.count_user_interviews(current_user.id)
+        if usage_count >= 2:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="HOST_KEY_LIMIT_EXCEEDED: You have utilized all your free daily tokens. To continue practicing technical interviews with unlimited sessions, please provide your own API Key in the sidebar."
+            )
+
     resume_text = None
     if payload.resume_id:
         resume_repo = ResumeRepository(db)
@@ -36,16 +83,16 @@ async def create_interview(
             )
         resume_text = resume.raw_text
 
-    # 1. Fetch past question texts to avoid repetitions
-    interview_repo = InterviewRepository(db)
+    # 2. Fetch past question texts to avoid repetitions
     past_questions = await interview_repo.get_past_question_texts(current_user.id, payload.role)
 
-    # 2. Ask Gemini to generate 5 challenging questions
+    # 3. Ask AI to generate 5 challenging questions using target key/model settings
     questions_data = await generate_interview_questions(
         role=payload.role,
         difficulty=payload.difficulty,
         resume_text=resume_text,
-        past_questions=past_questions
+        past_questions=past_questions,
+        user_keys=user_keys
     )
 
     if not questions_data:
@@ -171,10 +218,11 @@ async def delete_interview(
 async def evaluate_interview(
     interview_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_keys: UserAPIKeys = Depends(get_byok_keys)
 ):
     """
-    Submits all answered questions to Gemini for evaluation, updates scores and feedback,
+    Submits all answered questions to Gemini/OpenAI for evaluation, updates scores and feedback,
     and marks the interview as Evaluated.
     """
     interview_repo = InterviewRepository(db)
@@ -202,11 +250,12 @@ async def evaluate_interview(
             "duration_seconds": q.response.duration_seconds
         })
 
-    # Call Gemini Evaluator
+    # Call AI Evaluator with keys
     evaluation_result = await evaluate_interview_responses(
         role=interview.role,
         difficulty=interview.difficulty,
-        questions_and_responses=questions_and_responses
+        questions_and_responses=questions_and_responses,
+        user_keys=user_keys
     )
     
     # Update Responses

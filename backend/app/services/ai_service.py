@@ -5,17 +5,22 @@ import random
 import httpx
 import google.generativeai as genai
 from app.core.config import settings
+from app.schemas.byok import UserAPIKeys
 
 logger = logging.getLogger(__name__)
 
-async def _call_llm_json(prompt: str, system_instruction: str = None) -> dict:
+async def _call_llm_json(prompt: str, system_instruction: str = None, user_keys: UserAPIKeys = None) -> dict:
     """
-    Unified client to fetch structured JSON data from either Gemini, Groq, or OpenRouter.
+    Unified client to fetch structured JSON data from either Gemini, Groq, OpenRouter, or OpenAI.
     """
     provider = settings.LLM_PROVIDER.lower() if settings.LLM_PROVIDER else "gemini"
     
-    # Try to auto-fallback/detect provider if the selected provider key is missing
-    if provider == "gemini" and not settings.GEMINI_API_KEY:
+    # If user keys specify a custom provider, override the host system provider
+    if user_keys and user_keys.provider in ["gemini", "openai", "groq", "openrouter"]:
+        provider = user_keys.provider
+
+    # Try to auto-fallback/detect provider if the selected provider key is missing and no user key is set
+    if (not user_keys or user_keys.provider == "default") and provider == "gemini" and not settings.GEMINI_API_KEY:
         if settings.GROQ_API_KEY:
             provider = "groq"
             logger.info("GEMINI_API_KEY missing. Auto-routing to Groq.")
@@ -26,31 +31,45 @@ async def _call_llm_json(prompt: str, system_instruction: str = None) -> dict:
             raise ValueError("No LLM API keys configured.")
             
     if provider == "gemini":
-        if not settings.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not configured.")
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel(settings.GEMINI_MODEL)
+        gemini_key = (user_keys.gemini_key if user_keys else None) or settings.GEMINI_API_KEY
+        if not gemini_key:
+            raise ValueError("Gemini API Key is not configured. Please add one under 'Already have a key?' in Settings.")
         
-        full_content = prompt
-        if system_instruction:
-            full_content = f"{system_instruction}\n\n{prompt}"
+        try:
+            genai.configure(api_key=gemini_key)
             
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                model.generate_content,
-                full_content,
-                generation_config={"response_mime_type": "application/json"}
-            ),
-            timeout=25.0
-        )
-        return json.loads(response.text)
+            # Use user's selected model or system default
+            selected_model = (user_keys.model if user_keys and user_keys.model else settings.GEMINI_MODEL) or "gemini-1.5-flash"
+            model = genai.GenerativeModel(selected_model)
+            
+            full_content = prompt
+            if system_instruction:
+                full_content = f"{system_instruction}\n\n{prompt}"
+                
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    model.generate_content,
+                    full_content,
+                    generation_config={"response_mime_type": "application/json"}
+                ),
+                timeout=25.0
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            err_msg = str(e)
+            if "key not valid" in err_msg.lower() or "api key" in err_msg.lower() or "unauthorized" in err_msg.lower():
+                raise ValueError("Gemini API Error: The provided Gemini key is invalid. Please verify it in Google AI Studio.")
+            elif "quota" in err_msg.lower() or "limit" in err_msg.lower() or "exhausted" in err_msg.lower() or "429" in err_msg:
+                raise ValueError("Gemini API Error: Rate limit or credit quota exceeded. Please check your Google AI Studio billing/usage limits.")
+            raise ValueError(f"Gemini API Error: {err_msg}")
         
-    elif provider == "groq":
-        if not settings.GROQ_API_KEY:
-            raise ValueError("GROQ_API_KEY is not configured.")
+    elif provider == "openai":
+        openai_key = (user_keys.openai_key if user_keys else None) or getattr(settings, "OPENAI_API_KEY", None)
+        if not openai_key:
+            raise ValueError("OpenAI API Key is not configured. Please add one under 'Already have a key?' in Settings.")
         
         headers = {
-            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+            "Authorization": f"Bearer {openai_key}",
             "Content-Type": "application/json"
         }
         
@@ -59,31 +78,105 @@ async def _call_llm_json(prompt: str, system_instruction: str = None) -> dict:
             messages.append({"role": "system", "content": system_instruction})
         messages.append({"role": "user", "content": prompt})
         
+        # Use user's selected model or fallback to gpt-4o-mini
+        selected_model = (user_keys.model if user_keys and user_keys.model else "gpt-4o-mini")
+        
         payload = {
-            "model": settings.GROQ_MODEL,
+            "model": selected_model,
             "messages": messages,
             "response_format": {"type": "json_object"},
             "temperature": 0.3
         }
         
-        async with httpx.AsyncClient() as client:
-            res = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=25.0
-            )
-            res.raise_for_status()
-            data = res.json()
-            content = data["choices"][0]["message"]["content"]
-            return json.loads(content)
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=25.0
+                )
+                res.raise_for_status()
+                data = res.json()
+                content = data["choices"][0]["message"]["content"]
+                return json.loads(content)
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            err_detail = ""
+            try:
+                err_detail = e.response.json().get("error", {}).get("message", "")
+            except Exception:
+                err_detail = e.response.text
+            if status_code == 401:
+                raise ValueError("OpenAI API Error: The provided API key is invalid or has expired.")
+            elif status_code == 403:
+                raise ValueError("OpenAI API Error: Access forbidden. Please check your developer key permissions.")
+            elif status_code == 429:
+                raise ValueError("OpenAI API Error: Rate limit or billing quota exceeded. Please fund your OpenAI platform credits.")
+            else:
+                raise ValueError(f"OpenAI API Error ({status_code}): {err_detail or str(e)}")
+        except Exception as e:
+            raise ValueError(f"OpenAI API Error: {str(e)}")
             
-    elif provider == "openrouter":
-        if not settings.OPENROUTER_API_KEY:
-            raise ValueError("OPENROUTER_API_KEY is not configured.")
+    elif provider == "groq":
+        groq_key = (user_keys.groq_key if user_keys else None) or settings.GROQ_API_KEY
+        if not groq_key:
+            raise ValueError("Groq API Key is not configured. Please add one under 'Already have a key?' in Settings.")
         
         headers = {
-            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+            "Authorization": f"Bearer {groq_key}",
+            "Content-Type": "application/json"
+        }
+        
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
+        
+        selected_model = (user_keys.model if user_keys and user_keys.model else settings.GROQ_MODEL) or "llama3-8b-8192"
+        
+        payload = {
+            "model": selected_model,
+            "messages": messages,
+            "response_format": {"type": "json_object"},
+            "temperature": 0.3
+        }
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=25.0
+                )
+                res.raise_for_status()
+                data = res.json()
+                content = data["choices"][0]["message"]["content"]
+                return json.loads(content)
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            err_detail = ""
+            try:
+                err_detail = e.response.json().get("error", {}).get("message", "")
+            except Exception:
+                err_detail = e.response.text
+            if status_code == 401:
+                raise ValueError("Groq API Error: The provided Groq API key is invalid.")
+            elif status_code == 429:
+                raise ValueError("Groq API Error: Rate limit or free credits limit exceeded.")
+            else:
+                raise ValueError(f"Groq API Error ({status_code}): {err_detail or str(e)}")
+        except Exception as e:
+            raise ValueError(f"Groq API Error: {str(e)}")
+            
+    elif provider == "openrouter":
+        openrouter_key = (user_keys.openrouter_key if user_keys else None) or settings.OPENROUTER_API_KEY
+        if not openrouter_key:
+            raise ValueError("OpenRouter API Key is not configured. Please add one under 'Already have a key?' in Settings.")
+        
+        headers = {
+            "Authorization": f"Bearer {openrouter_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/parinbajayebin/AI-Mock-Interview",
             "X-Title": "AI Mock Interview Platform"
@@ -94,29 +187,47 @@ async def _call_llm_json(prompt: str, system_instruction: str = None) -> dict:
             messages.append({"role": "system", "content": system_instruction})
         messages.append({"role": "user", "content": prompt})
         
+        selected_model = (user_keys.model if user_keys and user_keys.model else settings.OPENROUTER_MODEL) or "meta-llama/llama-3-8b-instruct:free"
+        
         payload = {
-            "model": settings.OPENROUTER_MODEL,
+            "model": selected_model,
             "messages": messages,
             "response_format": {"type": "json_object"},
             "temperature": 0.3
         }
         
-        async with httpx.AsyncClient() as client:
-            res = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=25.0
-            )
-            res.raise_for_status()
-            data = res.json()
-            content = data["choices"][0]["message"]["content"]
-            return json.loads(content)
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=25.0
+                )
+                res.raise_for_status()
+                data = res.json()
+                content = data["choices"][0]["message"]["content"]
+                return json.loads(content)
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            err_detail = ""
+            try:
+                err_detail = e.response.json().get("error", {}).get("message", "")
+            except Exception:
+                err_detail = e.response.text
+            if status_code == 401:
+                raise ValueError("OpenRouter API Error: The provided OpenRouter API key is invalid.")
+            elif status_code == 429:
+                raise ValueError("OpenRouter API Error: Rate limit or daily credits exceeded.")
+            else:
+                raise ValueError(f"OpenRouter API Error ({status_code}): {err_detail or str(e)}")
+        except Exception as e:
+            raise ValueError(f"OpenRouter API Error: {str(e)}")
             
     else:
         raise ValueError(f"Unsupported LLM provider: {provider}")
 
-async def analyze_resume_text(raw_text: str) -> dict:
+async def analyze_resume_text(raw_text: str, user_keys: UserAPIKeys = None) -> dict:
     """
     Parses resume text and returns a structured dictionary:
     {
@@ -125,12 +236,12 @@ async def analyze_resume_text(raw_text: str) -> dict:
         "parsed_metadata": { ... }
     }
     """
-    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY
+    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY or (user_keys and (user_keys.gemini_key or user_keys.openai_key))
     if not has_keys:
         logger.error("No LLM API keys are configured.")
         return {
             "skills": [],
-            "experience_summary": "No LLM API key is configured. Could not generate summary.",
+            "experience_summary": "No LLM API key is configured. Please configure your key in Settings.",
             "parsed_metadata": {}
         }
 
@@ -168,7 +279,8 @@ async def analyze_resume_text(raw_text: str) -> dict:
     try:
         result = await _call_llm_json(
             prompt=f"Please analyze the following resume text and output the requested JSON object:\n\n{raw_text}",
-            system_instruction=prompt
+            system_instruction=prompt,
+            user_keys=user_keys
         )
         return {
             "skills": result.get("skills", []),
@@ -187,13 +299,14 @@ async def generate_interview_questions(
     role: str,
     difficulty: str,
     resume_text: str | None = None,
-    past_questions: list[str] | None = None
+    past_questions: list[str] | None = None,
+    user_keys: UserAPIKeys = None
 ) -> list[dict]:
     """
     Generates 5 tailored technical interview questions based on target role, difficulty,
     and optional resume text/skills.
     """
-    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY
+    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY or (user_keys and (user_keys.gemini_key or user_keys.openai_key))
     if not has_keys:
         logger.error("No LLM API keys are configured.")
         return _get_fallback_questions(role, difficulty)
@@ -238,7 +351,7 @@ async def generate_interview_questions(
     """
 
     try:
-        questions = await _call_llm_json(prompt=prompt)
+        questions = await _call_llm_json(prompt=prompt, user_keys=user_keys)
         if isinstance(questions, list) and len(questions) > 0:
             return questions
         # Sometimes models wrap lists in an object, try to extract it if so
@@ -388,7 +501,8 @@ def _get_fallback_questions(role: str, difficulty: str) -> list[dict]:
 async def evaluate_interview_responses(
     role: str,
     difficulty: str,
-    questions_and_responses: list[dict]
+    questions_and_responses: list[dict],
+    user_keys: UserAPIKeys = None
 ) -> dict:
     """
     Evaluates candidate responses against ideal answers using LLM.
@@ -404,7 +518,7 @@ async def evaluate_interview_responses(
     ]
     Returns a dict with overall_score, general_feedback, and a list of evaluations.
     """
-    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY
+    has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY or (user_keys and (user_keys.gemini_key or user_keys.openai_key))
     if not has_keys:
         logger.error("No LLM API keys are configured. Returning mock evaluation.")
         return _get_fallback_evaluations(questions_and_responses)
@@ -439,7 +553,7 @@ async def evaluate_interview_responses(
     """
 
     try:
-        result = await _call_llm_json(prompt=prompt)
+        result = await _call_llm_json(prompt=prompt, user_keys=user_keys)
         return result
     except Exception as e:
         logger.exception("Failed to evaluate interview with LLM")

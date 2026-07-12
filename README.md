@@ -9,6 +9,8 @@ An advanced, production-grade SaaS-inspired platform designed to help candidates
 
 ## 🚀 Key Features
 
+* **Bring Your Own Key (BYOK) & Token Independence (USP)**: Users can plug in their own custom API keys (Google Gemini, OpenAI, or Groq) to toggle models dynamically (e.g. Gemini 1.5 Pro vs GPT-4o). Keys are stored safely on the client-side (`localStorage`) with zero host database storage, protecting user privacy and eliminating host API bills.
+* **Smart Credit Control & Limiter**: Automatically manages host resource limits. Users without their own keys get a fixed allocation of free mocks, after which they are prompted to add their key to unlock unlimited premium evaluations.
 * **Resume Parser Engine**: Drag-and-drop PDF parsing that uses Gemini to extract technical skills, professional experience, contact details, and academic backgrounds.
 * **Tailored Question Generator**: Dynamically compiles 5 tailored questions (Coding tasks, Scenario designs, and MCQs) based on the candidate's resume, target role, and career stage.
 * **Interactive Terminal**: An immersive workspace featuring active progress timers, question navigation, and real-time response inputs.

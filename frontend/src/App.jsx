@@ -49,7 +49,506 @@ import ActiveInterview from './components/ActiveInterview';
 import EvaluationReport from './components/EvaluationReport';
 import PerformanceAnalytics from './components/PerformanceAnalytics';
 import InterviewHistory from './components/InterviewHistory';
-import { Brain, CheckCircle, Menu, X } from 'lucide-react';
+import { Brain, CheckCircle, Menu, X, Eye, EyeOff } from 'lucide-react';
+
+const APIKeyGuideModal = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = React.useState('gemini');
+
+  if (!isOpen) return null;
+
+  const tabs = [
+    { id: 'gemini', label: 'Google Gemini (Free)' },
+    { id: 'openrouter', label: 'OpenRouter (Free)' },
+    { id: 'groq', label: 'Groq (Free)' },
+    { id: 'openai', label: 'OpenAI (Paid)' }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
+      
+      {/* Modal Container */}
+      <div className="relative w-full max-w-2xl bg-white/80 backdrop-blur-2xl border border-white/60 rounded-signal-xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col z-50 text-left">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-200/60 flex items-center justify-between">
+          <div>
+            <h3 className="font-display font-bold text-lg text-slate-900">API Key Sourcing Guide</h3>
+            <p className="text-xs text-slate-600 mt-0.5">Learn how to get free or cheap API keys to unlock unlimited interviewing</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-signal-md text-slate-500 hover:text-slate-800 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Tab Buttons */}
+        <div className="flex border-b border-slate-200/60 bg-slate-100/50 p-2 gap-1 overflow-x-auto shrink-0">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-signal-md transition-all shrink-0 ${
+                activeTab === t.id
+                  ? 'bg-white text-slate-900 border border-slate-200/80 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 border border-transparent'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content Area */}
+        <div className="p-6 overflow-y-auto space-y-5 text-sm text-slate-700 flex-1 leading-relaxed">
+          {activeTab === 'gemini' && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-signal-lg p-4 text-[13px] text-blue-800">
+                ⭐ <strong>Recommended:</strong> Google AI Studio provides a 100% free tier for developers. Perfect for testing models like Gemini 1.5 Flash and Pro without billing.
+              </div>
+              <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
+                <li>Go to the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">Google AI Studio Console</a>.</li>
+                <li>Log in using any standard Google/Gmail account.</li>
+                <li>Click the green <strong>"Get API Key"</strong> button in the left sidebar.</li>
+                <li>Click <strong>"Create API Key"</strong>.</li>
+                <li>Select a project (or create a new default one) and click <strong>"Create API Key in Existing Project"</strong>.</li>
+                <li>Copy the key (starts with <code>AIzaSy...</code>) and paste it into the Gemini API input.</li>
+              </ol>
+            </div>
+          )}
+
+          {activeTab === 'openrouter' && (
+            <div className="space-y-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-signal-lg p-4 text-[13px] text-purple-800">
+                🌐 OpenRouter gives you access to <strong>100% free open-source models</strong> (like Meta Llama 3, Google Gemma 2, or Mistral 7B) with no payment card required!
+              </div>
+              <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
+                <li>Go to <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">OpenRouter.ai</a>.</li>
+                <li>Sign up for a free account.</li>
+                <li>Go to the <strong>Keys</strong> section in your dashboard.</li>
+                <li>Click <strong>"Create Key"</strong>, name it, and click <strong>"Create"</strong>.</li>
+                <li>Copy the key (starts with <code>sk-or-v1-...</code>) and configure it in the OpenRouter API Key input.</li>
+              </ol>
+            </div>
+          )}
+
+          {activeTab === 'groq' && (
+            <div className="space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-signal-lg p-4 text-[13px] text-orange-800">
+                ⚡ Groq provides developer API keys for free with rate limits. Offers blazing fast response times for Llama-3 models.
+              </div>
+              <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
+                <li>Go to the <a href="https://console.groq.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">Groq Developer Console</a>.</li>
+                <li>Sign up or log in.</li>
+                <li>Click on <strong>"API Keys"</strong> in the left navigation sidebar.</li>
+                <li>Click <strong>"Create API Key"</strong>.</li>
+                <li>Copy the key (starts with <code>gsk_...</code>) and paste it in the settings.</li>
+              </ol>
+            </div>
+          )}
+
+          {activeTab === 'openai' && (
+            <div className="space-y-4">
+              <div className="bg-teal-50 border border-teal-200 rounded-signal-lg p-4 text-[13px] text-teal-800">
+                💳 OpenAI requires a developer account with a pre-funded credit balance (minimum $5). Sessions are extremely cheap (less than $0.01 per interview using GPT-4o mini).
+              </div>
+              <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
+                <li>Go to the <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">OpenAI Platform</a>.</li>
+                <li>Sign up/log in and head to <strong>Settings &gt; Billing</strong> to add a balance of $5.</li>
+                <li>Click <strong>"API Keys"</strong> in the left sidebar.</li>
+                <li>Click <strong>"+ Create new secret key"</strong>.</li>
+                <li>Copy the key (starts with <code>sk-...</code>) immediately.</li>
+              </ol>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 flex justify-end shrink-0">
+          <button onClick={onClose} className="btn-primary px-5 py-2 text-xs">
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PROVIDER_MODELS = {
+  gemini: [
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Fast)' },
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Analytical)' },
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Newest)' }
+  ],
+  openai: [
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Cost-Effective)' },
+    { value: 'gpt-4o', label: 'GPT-4o (Premium)' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Classic)' }
+  ],
+  groq: [
+    { value: 'llama3-8b-8192', label: 'Llama 3 8B (Speed)' },
+    { value: 'llama3-70b-8192', label: 'Llama 3 70B (Smart)' },
+    { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B (Large context)' }
+  ],
+  openrouter: [
+    { value: 'meta-llama/llama-3-8b-instruct:free', label: 'Llama 3 8B (100% Free)' },
+    { value: 'google/gemma-2-9b-it:free', label: 'Gemma 2 9B (100% Free)' },
+    { value: 'mistralai/mistral-7b-instruct:free', label: 'Mistral 7B (100% Free)' },
+    { value: 'microsoft/phi-3-medium-128k-instruct:free', label: 'Phi-3 Medium (100% Free)' },
+    { value: 'openchat/openchat-7b:free', label: 'OpenChat 7B (100% Free)' }
+  ]
+};
+
+const BYOKWidget = ({
+  byokProvider,
+  byokGeminiKey,
+  byokOpenAIKey,
+  byokGroqKey,
+  byokOpenRouterKey,
+  byokModel,
+  onSave,
+  onOpenGuide,
+  token,
+  userId
+}) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  // Local/Temporary draft state - does not modify the global state until Saved
+  const [tempProvider, setTempProvider] = React.useState(byokProvider);
+  const [tempGeminiKey, setTempGeminiKey] = React.useState(byokGeminiKey);
+  const [tempOpenAIKey, setTempOpenAIKey] = React.useState(byokOpenAIKey);
+  const [tempGroqKey, setTempGroqKey] = React.useState(byokGroqKey);
+  const [tempOpenRouterKey, setTempOpenRouterKey] = React.useState(byokOpenRouterKey);
+  const [tempModel, setTempModel] = React.useState(byokModel);
+
+  const [showGemini, setShowGemini] = React.useState(false);
+  const [showOpenAI, setShowOpenAI] = React.useState(false);
+  const [showGroq, setShowGroq] = React.useState(false);
+  const [showOpenRouter, setShowOpenRouter] = React.useState(false);
+
+  const [isValidating, setIsValidating] = React.useState(false);
+  const [validationError, setValidationError] = React.useState('');
+  const [validationSuccess, setValidationSuccess] = React.useState('');
+
+  // Sync draft state with props when widget is opened/props change
+  React.useEffect(() => {
+    setTempProvider(byokProvider);
+    setTempGeminiKey(byokGeminiKey);
+    setTempOpenAIKey(byokOpenAIKey);
+    setTempGroqKey(byokGroqKey);
+    setTempOpenRouterKey(byokOpenRouterKey);
+    setTempModel(byokModel);
+    setValidationError('');
+    setValidationSuccess('');
+  }, [byokProvider, byokGeminiKey, byokOpenAIKey, byokGroqKey, byokOpenRouterKey, byokModel, isOpen]);
+
+  // Adjust model when provider changes in draft state
+  const handleProviderChange = (newProvider) => {
+    setTempProvider(newProvider);
+    if (newProvider === 'default') {
+      setTempModel('');
+    } else {
+      const defaultModel = PROVIDER_MODELS[newProvider]?.[0]?.value || '';
+      setTempModel(defaultModel);
+    }
+  };
+
+  const handleSave = async () => {
+    setValidationError('');
+    setValidationSuccess('');
+    setIsValidating(true);
+
+    const suffix = userId || 'default';
+
+    // 1. Back up current values from localStorage
+    const backupKeys = {
+      provider: localStorage.getItem(`byok_provider_${suffix}`),
+      gemini: localStorage.getItem(`byok_gemini_key_${suffix}`),
+      openai: localStorage.getItem(`byok_openai_key_${suffix}`),
+      groq: localStorage.getItem(`byok_groq_key_${suffix}`),
+      openrouter: localStorage.getItem(`byok_openrouter_key_${suffix}`),
+      model: localStorage.getItem(`byok_model_${suffix}`)
+    };
+
+    // 2. Temporarily write temp settings to localStorage so the fetch interceptor sends them as headers
+    localStorage.setItem(`byok_provider_${suffix}`, tempProvider);
+    localStorage.setItem(`byok_gemini_key_${suffix}`, tempGeminiKey);
+    localStorage.setItem(`byok_openai_key_${suffix}`, tempOpenAIKey);
+    localStorage.setItem(`byok_groq_key_${suffix}`, tempGroqKey);
+    localStorage.setItem(`byok_openrouter_key_${suffix}`, tempOpenRouterKey);
+    localStorage.setItem(`byok_model_${suffix}`, tempModel);
+
+    try {
+      if (tempProvider === 'default') {
+        onSave(tempProvider, tempGeminiKey, tempOpenAIKey, tempGroqKey, tempOpenRouterKey, tempModel);
+        setValidationSuccess('Using Host Credits.');
+        setTimeout(() => setValidationSuccess(''), 2000);
+        return;
+      }
+
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+      const response = await fetch(`${apiBase}/api/interviews/validate-key`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'API Key validation failed.');
+      }
+
+      // Success! Update global state
+      onSave(tempProvider, tempGeminiKey, tempOpenAIKey, tempGroqKey, tempOpenRouterKey, tempModel);
+      setValidationSuccess('Configuration verified and saved!');
+      setTimeout(() => {
+        setValidationSuccess('');
+      }, 4000);
+    } catch (err) {
+      // Restore backups
+      localStorage.setItem(`byok_provider_${suffix}`, backupKeys.provider || 'default');
+      localStorage.setItem(`byok_gemini_key_${suffix}`, backupKeys.gemini || '');
+      localStorage.setItem(`byok_openai_key_${suffix}`, backupKeys.openai || '');
+      localStorage.setItem(`byok_groq_key_${suffix}`, backupKeys.groq || '');
+      localStorage.setItem(`byok_openrouter_key_${suffix}`, backupKeys.openrouter || '');
+      localStorage.setItem(`byok_model_${suffix}`, backupKeys.model || '');
+      
+      setValidationError(err.message || 'Key validation failed. Please check inputs.');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-white/10">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between text-secondary hover:text-primary transition-colors py-1 text-left focus:outline-none"
+      >
+        <span className="font-display font-bold text-[10px] tracking-wider uppercase">Already have a key?</span>
+        <span className="text-[9px] text-accent/80 font-bold px-1.5 py-0.5 rounded-full bg-accent/5 border border-accent/10">
+          {byokProvider === 'default' ? 'Config' : 'Active'}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="mt-3 space-y-3.5 animate-slide-down">
+          {/* Provider Select */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-secondary">Key Provider</label>
+            <select
+              value={tempProvider}
+              onChange={(e) => handleProviderChange(e.target.value)}
+              className="w-full glass-input py-1.5 px-2.5 text-[11px] focus:outline-none"
+            >
+              <option value="default">Host Credits (Basic)</option>
+              <option value="gemini">Google Gemini (BYOK)</option>
+              <option value="openai">OpenAI (BYOK)</option>
+              <option value="groq">Groq (BYOK)</option>
+              <option value="openrouter">OpenRouter (BYOK)</option>
+            </select>
+          </div>
+
+          {/* Conditional Key Inputs */}
+          {tempProvider === 'gemini' && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-secondary">Gemini API Key</label>
+              <div className="relative">
+                <input
+                  type={showGemini ? 'text' : 'password'}
+                  value={tempGeminiKey}
+                  onChange={(e) => setTempGeminiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full glass-input py-1.5 pl-2.5 pr-8 text-[11px] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGemini(!showGemini)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-primary focus:outline-none"
+                >
+                  {showGemini ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tempProvider === 'openai' && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-secondary">OpenAI API Key</label>
+              <div className="relative">
+                <input
+                  type={showOpenAI ? 'text' : 'password'}
+                  value={tempOpenAIKey}
+                  onChange={(e) => setTempOpenAIKey(e.target.value)}
+                  placeholder="sk-..."
+                  className="w-full glass-input py-1.5 pl-2.5 pr-8 text-[11px] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOpenAI(!showOpenAI)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-primary focus:outline-none"
+                >
+                  {showOpenAI ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tempProvider === 'groq' && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-secondary">Groq API Key</label>
+              <div className="relative">
+                <input
+                  type={showGroq ? 'text' : 'password'}
+                  value={tempGroqKey}
+                  onChange={(e) => setTempGroqKey(e.target.value)}
+                  placeholder="gsk_..."
+                  className="w-full glass-input py-1.5 pl-2.5 pr-8 text-[11px] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGroq(!showGroq)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-primary focus:outline-none"
+                >
+                  {showGroq ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tempProvider === 'openrouter' && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-secondary">OpenRouter API Key</label>
+              <div className="relative">
+                <input
+                  type={showOpenRouter ? 'text' : 'password'}
+                  value={tempOpenRouterKey}
+                  onChange={(e) => setTempOpenRouterKey(e.target.value)}
+                  placeholder="sk-or-v1-..."
+                  className="w-full glass-input py-1.5 pl-2.5 pr-8 text-[11px] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOpenRouter(!showOpenRouter)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-primary focus:outline-none"
+                >
+                  {showOpenRouter ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Model Selector Section (Redesigned beautifully as requested) */}
+          {tempProvider !== 'default' && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-semibold text-secondary">Target Model</label>
+                <span className="text-[9px] text-accent font-bold px-1.5 py-0.5 rounded-full bg-accent/5 border border-accent/10">
+                  Model options
+                </span>
+              </div>
+              <select
+                value={tempModel}
+                onChange={(e) => setTempModel(e.target.value)}
+                className="w-full glass-input py-1.5 px-2 text-[11px] focus:outline-none"
+              >
+                {PROVIDER_MODELS[tempProvider]?.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Setup Guide Link */}
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            className="w-full text-left text-[10px] font-bold text-accent hover:text-accent-secondary flex items-center gap-1 focus:outline-none"
+          >
+            <span>💡 Setup Guide & Free Keys</span>
+          </button>
+
+          {/* Validation Feedback & Save Action */}
+          {validationError && (
+            <div className="text-[10px] text-red-600 bg-red-50 border border-red-200 rounded-signal-md p-2 leading-normal">
+              ⚠️ {validationError}
+            </div>
+          )}
+          {validationSuccess && (
+            <div className="text-[10px] text-teal-600 bg-teal-50 border border-teal-200 rounded-signal-md p-2 leading-normal flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+              {validationSuccess}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isValidating}
+            className="w-full btn-primary py-1.5 px-3 text-[11px] flex items-center justify-center gap-1.5 font-bold"
+          >
+            {isValidating ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>Verifying...</span>
+              </>
+            ) : (
+              <span>Save & Apply Keys</span>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const renderUserTierBadge = (provider, model) => {
+  if (provider === 'default' || !provider) {
+    return (
+      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+        Basic Tier
+      </span>
+    );
+  }
+  
+  if (provider === 'gemini') {
+    return (
+      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded-full select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+        BYOK: Gemini ({model?.includes('2.5') ? '2.5' : model?.includes('pro') ? 'Pro' : 'Flash'})
+      </span>
+    );
+  }
+
+  if (provider === 'openai') {
+    return (
+      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-cyan-600 bg-cyan-50 border border-cyan-200 px-1.5 py-0.5 rounded-full select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+        BYOK: OpenAI ({model?.includes('mini') ? 'Mini' : model?.includes('turbo') ? 'Turbo' : 'GPT-4'})
+      </span>
+    );
+  }
+
+  if (provider === 'groq') {
+    return (
+      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-full select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+        BYOK: Groq ({model?.includes('70b') ? '70B' : model?.includes('mixtral') ? 'Mixtral' : '8B'})
+      </span>
+    );
+  }
+
+  if (provider === 'openrouter') {
+    return (
+      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded-full select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+        BYOK: OpenRouter ({model?.includes('llama') ? 'Llama' : model?.includes('gemma') ? 'Gemma' : model?.includes('mistral') ? 'Mistral' : 'Free'})
+      </span>
+    );
+  }
+};
 
 // Verification Dashboard to display auth results, resume analysis, and mock interviews
 const Dashboard = () => {
@@ -62,6 +561,53 @@ const Dashboard = () => {
   const [completedInterviewId, setCompletedInterviewId] = React.useState(null);
   const [ongoingInterview, setOngoingInterview] = React.useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  // BYOK State Management
+  const [byokProvider, setByokProvider] = React.useState('default');
+  const [byokGeminiKey, setByokGeminiKey] = React.useState('');
+  const [byokOpenAIKey, setByokOpenAIKey] = React.useState('');
+  const [byokGroqKey, setByokGroqKey] = React.useState('');
+  const [byokOpenRouterKey, setByokOpenRouterKey] = React.useState('');
+  const [byokModel, setByokModel] = React.useState('');
+  const [guideOpen, setGuideOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user?.id) {
+      const suffix = user.id;
+      setByokProvider(localStorage.getItem(`byok_provider_${suffix}`) || localStorage.getItem('byok_provider') || 'default');
+      setByokGeminiKey(localStorage.getItem(`byok_gemini_key_${suffix}`) || localStorage.getItem('byok_gemini_key') || '');
+      setByokOpenAIKey(localStorage.getItem(`byok_openai_key_${suffix}`) || localStorage.getItem('byok_openai_key') || '');
+      setByokGroqKey(localStorage.getItem(`byok_groq_key_${suffix}`) || localStorage.getItem('byok_groq_key') || '');
+      setByokOpenRouterKey(localStorage.getItem(`byok_openrouter_key_${suffix}`) || localStorage.getItem('byok_openrouter_key') || '');
+      setByokModel(localStorage.getItem(`byok_model_${suffix}`) || localStorage.getItem('byok_model') || '');
+    }
+  }, [user]);
+
+  const handleByokSave = (provider, geminiKey, openaiKey, groqKey, openrouterKey, model) => {
+    const suffix = user?.id || 'default';
+    
+    localStorage.setItem(`byok_provider_${suffix}`, provider);
+    localStorage.setItem(`byok_gemini_key_${suffix}`, geminiKey);
+    localStorage.setItem(`byok_openai_key_${suffix}`, openaiKey);
+    localStorage.setItem(`byok_groq_key_${suffix}`, groqKey);
+    localStorage.setItem(`byok_openrouter_key_${suffix}`, openrouterKey);
+    localStorage.setItem(`byok_model_${suffix}`, model);
+
+    // Fallbacks for backward compatibility
+    localStorage.setItem('byok_provider', provider);
+    localStorage.setItem('byok_gemini_key', geminiKey);
+    localStorage.setItem('byok_openai_key', openaiKey);
+    localStorage.setItem('byok_groq_key', groqKey);
+    localStorage.setItem('byok_openrouter_key', openrouterKey);
+    localStorage.setItem('byok_model', model);
+
+    setByokProvider(provider);
+    setByokGeminiKey(geminiKey);
+    setByokOpenAIKey(openaiKey);
+    setByokGroqKey(groqKey);
+    setByokOpenRouterKey(openrouterKey);
+    setByokModel(model);
+  };
 
   React.useEffect(() => {
     const fetchDashboardData = async () => {
@@ -180,9 +726,10 @@ const Dashboard = () => {
                   <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-display font-bold text-sm shrink-0">
                     {user.full_name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight">{user.full_name}</h4>
-                    <p className="text-[11px] text-muted truncate mt-0.5">{user.email}</p>
+                  <div className="min-w-0 flex-1 flex flex-col items-start">
+                    <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight w-full text-left">{user.full_name}</h4>
+                    <p className="text-[11px] text-muted truncate mt-0.5 w-full text-left">{user.email}</p>
+                    {renderUserTierBadge(byokProvider, byokModel)}
                   </div>
                 </div>
               </div>
@@ -214,6 +761,23 @@ const Dashboard = () => {
                     </button>
                   );
                 })}
+
+                {/* BYOK Widget beneath Nav Tabs */}
+                <BYOKWidget
+                  byokProvider={byokProvider}
+                  byokGeminiKey={byokGeminiKey}
+                  byokOpenAIKey={byokOpenAIKey}
+                  byokGroqKey={byokGroqKey}
+                  byokOpenRouterKey={byokOpenRouterKey}
+                  byokModel={byokModel}
+                  onSave={handleByokSave}
+                  onOpenGuide={() => {
+                    setMobileMenuOpen(false);
+                    setGuideOpen(true);
+                  }}
+                  token={token}
+                  userId={user?.id}
+                />
               </nav>
 
               {/* Sign Out */}
@@ -249,9 +813,10 @@ const Dashboard = () => {
                   <div className="w-9 h-9 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center font-display font-bold text-sm shrink-0">
                     {user.full_name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight">{user.full_name}</h4>
-                    <p className="text-[11px] text-muted truncate mt-0.5">{user.email}</p>
+                  <div className="min-w-0 flex-1 flex flex-col items-start">
+                    <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight w-full text-left">{user.full_name}</h4>
+                    <p className="text-[11px] text-muted truncate mt-0.5 w-full text-left">{user.email}</p>
+                    {renderUserTierBadge(byokProvider, byokModel)}
                   </div>
                 </div>
               </div>
@@ -280,6 +845,20 @@ const Dashboard = () => {
                     </button>
                   );
                 })}
+
+                {/* BYOK Widget beneath Nav Tabs */}
+                <BYOKWidget
+                  byokProvider={byokProvider}
+                  byokGeminiKey={byokGeminiKey}
+                  byokOpenAIKey={byokOpenAIKey}
+                  byokGroqKey={byokGroqKey}
+                  byokOpenRouterKey={byokOpenRouterKey}
+                  byokModel={byokModel}
+                  onSave={handleByokSave}
+                  onOpenGuide={() => setGuideOpen(true)}
+                  token={token}
+                  userId={user?.id}
+                />
               </nav>
             </div>
 
@@ -626,6 +1205,11 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+
+      <APIKeyGuideModal 
+        isOpen={guideOpen} 
+        onClose={() => setGuideOpen(false)} 
+      />
     </div>
   );
 };

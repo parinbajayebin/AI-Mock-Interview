@@ -1,6 +1,36 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../supabaseClient';
 
+// Intercept window.fetch to globally attach BYOK headers to all outgoing requests
+const originalFetch = window.fetch;
+window.fetch = async function (url, options = {}) {
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+  const isApiRequest = typeof url === 'string' && (url.startsWith('/api') || (apiBase && url.startsWith(apiBase)));
+
+  if (isApiRequest) {
+    const headers = { ...options.headers };
+    const userId = localStorage.getItem('current_user_id') || 'default';
+    
+    // Helper to get user-specific item or fall back to generic item
+    const getBYOKItem = (key) => {
+      return localStorage.getItem(`${key}_${userId}`) || localStorage.getItem(key) || '';
+    };
+    
+    const provider = localStorage.getItem(`byok_provider_${userId}`) || localStorage.getItem('byok_provider') || 'default';
+
+    headers['X-User-Provider'] = provider;
+    headers['X-User-Gemini-Key'] = getBYOKItem('byok_gemini_key');
+    headers['X-User-OpenAI-Key'] = getBYOKItem('byok_openai_key');
+    headers['X-User-Groq-Key'] = getBYOKItem('byok_groq_key');
+    headers['X-User-OpenRouter-Key'] = getBYOKItem('byok_openrouter_key');
+    headers['X-User-Model'] = getBYOKItem('byok_model');
+
+    options.headers = headers;
+  }
+  
+  return originalFetch.apply(this, [url, options]);
+};
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -12,8 +42,17 @@ export const AuthProvider = ({ children }) => {
 
   // Sync token to API requests automatically
   const apiFetch = async (url, options = {}) => {
+    const userProvider = localStorage.getItem('byok_provider') || 'default';
+    const userGeminiKey = localStorage.getItem('byok_gemini_key') || '';
+    const userOpenAIKey = localStorage.getItem('byok_openai_key') || '';
+    const userModel = localStorage.getItem('byok_model') || '';
+
     const headers = {
       'Content-Type': 'application/json',
+      'X-User-Provider': userProvider,
+      'X-User-Gemini-Key': userGeminiKey,
+      'X-User-OpenAI-Key': userOpenAIKey,
+      'X-User-Model': userModel,
       ...options.headers,
     };
     
@@ -55,6 +94,7 @@ export const AuthProvider = ({ children }) => {
       if (res.ok) {
         const userData = await res.json();
         console.log("Backend user data received:", userData.email);
+        localStorage.setItem('current_user_id', userData.id);
         setUser(userData);
       } else {
         const errText = await res.text();
@@ -191,6 +231,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       await supabase.auth.signOut();
+      localStorage.removeItem('current_user_id');
       setUser(null);
       setToken(null);
     } catch (error) {
