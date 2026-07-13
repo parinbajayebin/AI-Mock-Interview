@@ -1,3 +1,12 @@
+"""
+Application settings — loaded from .env via Pydantic BaseSettings.
+
+Includes database, CORS, LLM provider, Supabase auth, and Razorpay payment
+credentials. All optional fields default to None so the app starts without
+a fully populated .env file during development.
+
+Author: parinbajayebin
+"""
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
@@ -46,5 +55,9 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None)
     SUPABASE_JWT_SECRET: Optional[str] = Field(default=None)
     VITE_SUPABASE_ANON_KEY: Optional[str] = Field(default=None)
+    
+    # Razorpay Payment Settings
+    RAZORPAY_KEY_ID: Optional[str] = Field(default=None)
+    RAZORPAY_KEY_SECRET: Optional[str] = Field(default=None)
 
 settings = Settings()
