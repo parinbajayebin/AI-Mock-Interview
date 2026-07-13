@@ -1,15 +1,4 @@
-"""
-Payments API — Razorpay order creation and HMAC signature verification.
 
-Provides two endpoints:
-  POST /payments/create-order  — creates a Razorpay order for the ₹199/month
-                                 Premium subscription (falls back to mock if keys
-                                 are not configured).
-  POST /payments/verify        — verifies the Razorpay HMAC signature and
-                                 upgrades the authenticated user's is_premium flag.
-
-Author: parinbajayebin
-"""
 import time
 import hmac
 import hashlib

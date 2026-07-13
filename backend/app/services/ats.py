@@ -1,12 +1,4 @@
-"""
-backend/app/services/ats.py
-Author: parinbajayebin
 
-ATS (Applicant Tracking System) Gap Analysis & Score Engine — Task A.5
-Compares a user's resume against a job description + optional company context
-to produce: match score, keyword gaps, bullet suggestions, ATS checklist,
-company-aware interview questions, and specific resume edit recommendations.
-"""
 
 import logging
 from app.services.ai_service import _call_llm_json

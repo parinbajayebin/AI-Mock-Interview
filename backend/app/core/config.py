@@ -1,12 +1,4 @@
-"""
-Application settings — loaded from .env via Pydantic BaseSettings.
 
-Includes database, CORS, LLM provider, Supabase auth, and Razorpay payment
-credentials. All optional fields default to None so the app starts without
-a fully populated .env file during development.
-
-Author: parinbajayebin
-"""
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator

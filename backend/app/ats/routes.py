@@ -1,14 +1,4 @@
-"""
-backend/app/ats/routes.py
-Author: parinbajayebin
 
-ATS (Applicant Tracking System) & Job Targeting API Routes — Tasks A.4 and A.5
-
-Endpoints:
-  POST /api/ats/scrape-job      — Scrape a specific job posting URL
-  POST /api/ats/scrape-company  — Scrape company homepage for background context
-  POST /api/ats/analyze         — Run full ATS (Applicant Tracking System) gap analysis
-"""
 
 import uuid
 import logging

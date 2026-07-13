@@ -1,11 +1,3 @@
-"""
-backend/app/services/scraper.py
-Author: parinbajayebin
-
-Company Career Page Scraper — Task A.4
-Fetches any job posting URL (Lever, Greenhouse, LinkedIn, direct company sites)
-and returns clean, structured job description text for ATS analysis.
-"""
 
 import re
 import logging
