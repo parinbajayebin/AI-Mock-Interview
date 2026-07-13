@@ -1,120 +1,153 @@
-# 🌟 AI-Powered Mock Interview Platform
+# 🌟 AI-Powered Mock Interview & Job Targeting Platform
 
-An advanced, production-grade SaaS-inspired platform designed to help candidates conquer their technical interviews. By reading uploaded resumes, parsing technology profiles, generating customized roles/difficulties, and utilizing Google Gemini for real-time grading, it delivers a feedback report and progress dashboard.
+<p align="center">
+  <img src="https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/FastAPI-0.109-emerald?style=for-the-badge&logo=fastapi" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-cyan?style=for-the-badge&logo=tailwind-css" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Docker-Enabled-blue?style=for-the-badge&logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Premium-Razorpay-orange?style=for-the-badge&logo=razorpay" alt="Razorpay" />
+</p>
 
-🔗 **Production Web App**: [ai-mock-interview-nu-eosin.vercel.app](https://ai-mock-interview-nu-eosin.vercel.app)  
-🔗 **Production API Server**: [ai-mock-interview-do4p.onrender.com](https://ai-mock-interview-do4p.onrender.com)
+An advanced, production-grade SaaS-inspired platform designed to help candidates prepare for technical interviews. The platform parses uploaded resumes, scrapes active job posting URLs, runs complete ATS gap analyses, and generates company-themed mock interviews utilizing Google Gemini for real-time grading, presenting a detailed evaluation report and interactive progress dashboard.
+
+🔗 **Live Web Application**: [ai-mock-interview-nu-eosin.vercel.app](https://ai-mock-interview-nu-eosin.vercel.app)  
+🔗 **API Server Gateway**: [ai-mock-interview-do4p.onrender.com](https://ai-mock-interview-do4p.onrender.com)
 
 ---
 
-## 🚀 Key Features
+## ✨ Key Feature Deployments
 
-* **Bring Your Own Key (BYOK) & Token Independence (USP)**: Users can plug in their own custom API keys (Google Gemini, OpenAI, or Groq) to toggle models dynamically (e.g. Gemini 1.5 Pro vs GPT-4o). Keys are stored safely on the client-side (`localStorage`) with zero host database storage, protecting user privacy and eliminating host API bills.
-* **Smart Credit Control & Limiter**: Automatically manages host resource limits. Users without their own keys get a fixed allocation of free mocks, after which they are prompted to add their key to unlock unlimited premium evaluations.
-* **Resume Parser Engine**: Drag-and-drop PDF parsing that uses Gemini to extract technical skills, professional experience, contact details, and academic backgrounds.
-* **Tailored Question Generator**: Dynamically compiles 5 tailored questions (Coding tasks, Scenario designs, and MCQs) based on the candidate's resume, target role, and career stage.
-* **Interactive Terminal**: An immersive workspace featuring active progress timers, question navigation, and real-time response inputs.
-* **Real-time AI Evaluator**: Comprehensively grades responses against ideal sample solutions, scoring answers, highlighting technical gaps, and listing core strengths/weaknesses.
-* **Performance Analytics**: Visual tracking of performance trends with customized responsive SVG line charts, average response metrics, and skill proficiency breakdowns.
-* **Session Recovery & History**: Complete mock history management. Easily search, filter, delete, or resume incomplete sessions.
+### 🔑 1. Bring Your Own Key (BYOK) Engine
+* **Token Independence**: Toggle dynamically between Google Gemini, OpenAI, or Groq models.
+* **Privacy Focused**: Custom API keys are stored securely on the client-side (`localStorage`) with zero host database tracking.
+* **Resource Limiting**: Users without custom keys receive a set of free mock interviews, after which they are seamlessly prompted to insert their own key or upgrade to Premium.
+
+### 🎯 2. ATS & Job Targeting Analyzer (Premium)
+* **Smart URL Scraper**: Fetches active job postings from Lever, Greenhouse, Workday, LinkedIn, or direct company career pages and extracts clean job description details.
+* **ATS Scorecard**: Calculates a match score (%) indicating how well the candidate's resume aligns with the target job posting.
+* **Keyword Gaps & Rewrite Tips**: Identifies missing technical/soft keywords and provides context-rich bullet point edits to upgrade the resume.
+
+### 🎭 3. Premium Mock Practice Sessions
+* **Company-Theme Generator**: Generates customized technical, behavioral, and system-design questions based on the candidate's chosen resume and the target company's specific job description.
+* **Frosted-Glass Panel UI**: Features a beautiful, responsive iPhone-inspired layout with search filtering to quickly look up saved targets by company name or role.
+
+### 📊 4. Visual Performance Analytics
+* **Progress Tracking**: Responsive SVG charts tracking cumulative match scores, average grades, and interview performance over time.
+* **Gaps Matrix**: Highlights recurring technical deficiency areas to suggest key focus topics.
+
+### 💳 5. Razorpay Subscription Gateway
+* **Premium Billing**: Integrates Razorpay checkout overlay offering instant upgrades to the Premium Tier (pricing: `₹199/month`).
+* **Secure Webhooks**: Verifies order credentials and transaction signatures using robust SHA-256 HMAC verification.
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Frontend**: React (Vite SPA) with Tailwind CSS for glassmorphic styling
-* **Backend**: FastAPI (Python asynchronous framework) with SQLAlchemy ORM and Pydantic
-* **Database**: PostgreSQL (relational ACID-compliant storage)
-* **Proxy & Serving**: Nginx (used locally as a reverse proxy gateway)
-* **AI Core**: Google Gemini 1.5 Flash / 2.5 Flash / 3.5 Flash APIs (with local heuristic fallbacks)
-* **Deployment**: Docker & Docker Compose (Local), Render (Backend Web Service), Vercel (Frontend Static hosting)
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite, Tailwind CSS, Lucide Icons | Responsive SPA featuring premium glassmorphic UI |
+| **Backend** | FastAPI, Python 3.11, Pydantic v2 | High-performance asynchronous REST API server |
+| **Database** | PostgreSQL | Relation database managed via SQLAlchemy (asyncpg) |
+| **Scraping** | HTTPX, BeautifulSoup4 | Asynchronous network scrapers targeting popular ATS layouts |
+| **AI Integration** | Google Gemini (1.5 Flash / 2.5 Pro) | Prompts optimized for structured JSON generation |
+| **Payments** | Razorpay SDK | Payment orders and backend signature verification webhooks |
+| **Hosting** | Vercel (Frontend), Render (Backend), Docker | Multi-stage Dockerized container setups |
 
 ---
 
-## 📂 Project Structure
+## 📂 Directory Layout
 
 ```text
 AI-Mock-Interview/
-├── docs/                      # Technical Documentation
+├── docs/                      # Tech Specs & Architectural Docs
 │   ├── ARCHITECTURE.md        # Core design & system data flows
 │   ├── API_DOCUMENTATION.md   # Complete REST API endpoint specs
-│   ├── DATABASE_DOCUMENTATION.md # PostgreSQL Table schemas
-│   └── PROJECT_DECISIONS.md   # Architectural & stack decisions
+│   └── DATABASE_DOCUMENTATION.md # PostgreSQL Table schemas
 ├── frontend/                  # React SPA (Vite + Tailwind CSS)
 │   ├── src/
-│   │   ├── components/        # Resume Upload, Config, Active Terminal, History, Analytics
-│   │   └── App.jsx            # Main app container & routing logic
-│   └── vercel.json            # Vercel deployment & API rewrite config
+│   │   ├── components/        # ActiveTerminal, PerformanceAnalytics, PremiumMockInterviewTab
+│   │   ├── context/           # AuthContext & Session management
+│   │   └── App.jsx            # Routing, lock screens, and main layouts
+│   └── vercel.json            # Deployment routing rules
 ├── backend/                   # FastAPI Server
 │   ├── app/
 │   │   ├── auth/              # JWT Registration & Authentication
-│   │   ├── resume/            # PDF parsing & storage
-│   │   ├── interview/         # Session config & state controllers
-│   │   ├── analytics/         # SQL aggregates & performance data
-│   │   ├── services/          # Gemini API integrations
-│   │   └── main.py            # API gateway entry point
-│   └── Dockerfile             # Production Python build instruction
-├── database/                  # SQL DDL Schemas & initial seed datasets
-├── docker/                    # Nginx reverse proxy configuration
+│   │   ├── ats/               # Scraper controls & ATS analysis endpoints
+│   │   ├── interview/         # Sessions, active prompts & AI grading
+│   │   ├── payments/          # Razorpay order checkout integrations
+│   │   ├── models/            # SQLAlchemy schemas (User, Resume, ATSHistory, Interview)
+│   │   └── main.py            # FastAPI main gateway config
+│   └── Dockerfile             # Multi-stage Python build recipe
 └── docker-compose.yml         # Local container orchestration script
 ```
 
 ---
 
-## ⚙️ Local Development (Running with Docker)
+## ⚙️ Local Setup Instructions
 
-Running the entire system locally requires only **Docker** and a **Gemini API Key**.
+### Option A: Running with Docker (Recommended)
 
-### 1. Configure Environment
-Clone the project, create a `.env` file in the root directory, and fill in the necessary keys:
-```env
-# Database Credentials
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres_secure_pass
-POSTGRES_DB=ai_mock_interview
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/parinbajayebin/AI-Mock-Interview.git
+   cd AI-Mock-Interview
+   ```
 
-# Database connection URL
-DATABASE_URL=postgresql+asyncpg://postgres:postgres_secure_pass@db:5432/ai_mock_interview
+2. **Configure Environment Variables**:
+   Create a `.env` file in the root directory:
+   ```env
+   # Database Credentials
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=postgres_secure_pass
+   POSTGRES_DB=ai_mock_interview
+   DATABASE_URL=postgresql+asyncpg://postgres:postgres_secure_pass@db:5432/ai_mock_interview
 
-# Gemini API Integration
-GEMINI_API_KEY=your_gemini_api_key
+   # LLM Integration
+   GEMINI_API_KEY=your_gemini_api_key
 
-# JWT Token Secret
-JWT_SECRET_KEY=your_super_secure_jwt_secret
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-```
+   # Authentication
+   JWT_SECRET_KEY=your_super_secure_jwt_secret
+   ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES=60
+   ```
 
-### 2. Boot up the Containers
-In the project root, launch the docker container stack:
+3. **Boot Up the Stack**:
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Access Applications**:
+   * **Frontend Dashboard**: [http://localhost](http://localhost) (routed via Nginx proxy).
+   * **API Docs**: [http://localhost/api/docs](http://localhost/api/docs).
+
+---
+
+### Option B: Local Manual Setup
+
+#### 1. Backend Server Setup
 ```bash
-docker-compose up --build
+cd backend
+python -m venv venv
+source venv/bin/activate  # Or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-* **Frontend App**: Access [http://localhost](http://localhost) (routed via Nginx proxy).
-* **API Documentation**: Open [http://localhost/api/docs](http://localhost/api/docs) or [http://localhost:8000/docs](http://localhost:8000/docs).
-* **PostgreSQL Database**: Port `5432` internally.
+#### 2. Frontend Development Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 🌐 Production Architecture & Deployment
-
-The live system uses a split-tier architecture:
-
-1. **Frontend Hosting (Vercel)**:
-   * Serves static HTML/JS/CSS assets with maximum global delivery speed.
-   * Leverages a rewrite rule inside `vercel.json` to proxy `/api/*` requests to Render, securing cookies/session states and avoiding cross-origin (CORS) header issues.
-2. **Backend Web Service (Render)**:
-   * Runs the containerized Python FastAPI backend using the project's `Dockerfile`.
-   * Integrates with a managed database instance and communicates directly with the Google Gemini API.
-
----
-
-## 👥 Authors & Contributors
-
-Meet the developers behind the platform:
+## 👥 Product Authors & Contributors
 
 * **Parin Makwana**  
-  🔗 [GitHub](https://github.com/parinbajayebin) | 🔗 [LinkedIn](https://www.linkedin.com/in/parin-makwana-b614a6333?utm_source=share_via&utm_content=profile&utm_medium=member_android)
+  🔗 [GitHub](https://github.com/parinbajayebin) | 🔗 [LinkedIn](https://www.linkedin.com/in/parin-makwana-b614a6333)
+
 * **Mayank Jayswal**  
   🔗 [GitHub](https://github.com/mayank-jayswal) | 🔗 [LinkedIn](https://in.linkedin.com/in/mayank-jayswal-3a7272378)
