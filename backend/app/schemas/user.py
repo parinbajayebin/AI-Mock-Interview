@@ -24,6 +24,7 @@ class UserResponse(UserBase):
     id: uuid.UUID
     auth_provider: str
     is_active: bool
+    is_premium: bool = False
     created_at: datetime
     updated_at: datetime
 

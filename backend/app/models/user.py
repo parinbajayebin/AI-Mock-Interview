@@ -56,6 +56,13 @@ class User(Base):
         nullable=False
     )
 
+    # is_premium BOOLEAN NOT NULL DEFAULT FALSE
+    is_premium: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+
     # created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
