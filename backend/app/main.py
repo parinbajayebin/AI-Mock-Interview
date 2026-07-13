@@ -4,6 +4,7 @@ from app.auth.routes import router as auth_router
 from app.resume.routes import router as resume_router
 from app.interview.routes import router as interview_router
 from app.analytics.routes import router as analytics_router
+from app.payments.routes import router as payments_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -28,6 +29,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(resume_router, prefix="/api")
 app.include_router(interview_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
+app.include_router(payments_router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 async def root():
