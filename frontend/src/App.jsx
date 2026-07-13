@@ -4,27 +4,34 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import ForgotPassword from './components/ForgotPassword';
-import { 
-  LogOut, 
-  Mail, 
-  ShieldCheck, 
-  Sparkles, 
-  PlusCircle, 
-  History, 
-  LayoutDashboard, 
-  FileText, 
-  Loader2, 
-  Phone, 
-  Linkedin, 
-  Globe, 
+import {
+  LogOut,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+  PlusCircle,
+  History,
+  LayoutDashboard,
+  FileText,
+  Loader2,
+  Phone,
+  Linkedin,
+  Globe,
   CheckCircle2,
-  Trash2
+  Trash2,
+  Link,
+  Award,
+  Key,
+  HelpCircle,
+  Edit,
+  Search,
+  Lock
 } from 'lucide-react';
 
 // Protected Route Guard Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
@@ -35,11 +42,11 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return children;
 };
 
@@ -49,6 +56,7 @@ import ActiveInterview from './components/ActiveInterview';
 import EvaluationReport from './components/EvaluationReport';
 import PerformanceAnalytics from './components/PerformanceAnalytics';
 import InterviewHistory from './components/InterviewHistory';
+import PremiumMockInterviewTab from './components/PremiumMockInterviewTab';
 import { Brain, CheckCircle, Menu, X, Eye, EyeOff } from 'lucide-react';
 
 const loadRazorpayScript = () => {
@@ -81,7 +89,7 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
-      
+
       {/* Modal Container */}
       <div className="relative w-full max-w-2xl bg-white/80 backdrop-blur-2xl border border-white/60 rounded-signal-xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col z-50 text-left">
         {/* Header */}
@@ -101,11 +109,10 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-signal-md transition-all shrink-0 ${
-                activeTab === t.id
+              className={`px-3 py-1.5 text-xs font-bold rounded-signal-md transition-all shrink-0 ${activeTab === t.id
                   ? 'bg-white text-slate-900 border border-slate-200/80 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 border border-transparent'
-              }`}
+                }`}
             >
               {t.label}
             </button>
@@ -117,7 +124,7 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
           {activeTab === 'gemini' && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-signal-lg p-4 text-[13px] text-blue-800">
-                ⭐ <strong>Recommended:</strong> Google AI Studio provides a 100% free tier for developers. Perfect for testing models like Gemini 1.5 Flash and Pro without billing.
+                â­ <strong>Recommended:</strong> Google AI Studio provides a 100% free tier for developers. Perfect for testing models like Gemini 1.5 Flash and Pro without billing.
               </div>
               <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
                 <li>Go to the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">Google AI Studio Console</a>.</li>
@@ -133,7 +140,7 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
           {activeTab === 'openrouter' && (
             <div className="space-y-4">
               <div className="bg-purple-50 border border-purple-200 rounded-signal-lg p-4 text-[13px] text-purple-800">
-                🌐 OpenRouter gives you access to <strong>100% free open-source models</strong> (like Meta Llama 3, Google Gemma 2, or Mistral 7B) with no payment card required!
+                ðŸŒ OpenRouter gives you access to <strong>100% free open-source models</strong> (like Meta Llama 3, Google Gemma 2, or Mistral 7B) with no payment card required!
               </div>
               <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
                 <li>Go to <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">OpenRouter.ai</a>.</li>
@@ -148,7 +155,7 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
           {activeTab === 'groq' && (
             <div className="space-y-4">
               <div className="bg-orange-50 border border-orange-200 rounded-signal-lg p-4 text-[13px] text-orange-800">
-                ⚡ Groq provides developer API keys for free with rate limits. Offers blazing fast response times for Llama-3 models.
+                âš¡ Groq provides developer API keys for free with rate limits. Offers blazing fast response times for Llama-3 models.
               </div>
               <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
                 <li>Go to the <a href="https://console.groq.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">Groq Developer Console</a>.</li>
@@ -163,7 +170,7 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
           {activeTab === 'openai' && (
             <div className="space-y-4">
               <div className="bg-teal-50 border border-teal-200 rounded-signal-lg p-4 text-[13px] text-teal-800">
-                💳 OpenAI requires a developer account with a pre-funded credit balance (minimum $5). Sessions are extremely cheap (less than $0.01 per interview using GPT-4o mini).
+                ðŸ’³ OpenAI requires a developer account with a pre-funded credit balance (minimum $5). Sessions are extremely cheap (less than $0.01 per interview using GPT-4o mini).
               </div>
               <ol className="space-y-3 list-decimal list-inside text-slate-700 font-medium">
                 <li>Go to the <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-secondary underline font-semibold">OpenAI Platform</a>.</li>
@@ -195,7 +202,7 @@ const PaymentSuccessModal = ({ isOpen, onClose }) => {
       {/* Light transparent backdrop */}
       <div className="absolute inset-0 bg-white/30 backdrop-blur-lg" onClick={onClose} />
 
-      {/* Card — light glass theme */}
+      {/* Card â€” light glass theme */}
       <div className="relative w-full max-w-sm bg-white/80 backdrop-blur-2xl border border-slate-200/80 rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center z-10">
         {/* Teal glow checkmark */}
         <div className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center mb-5 ring-4 ring-teal-100 shadow-[0_0_32px_rgba(20,184,166,0.25)]">
@@ -231,7 +238,7 @@ const PremiumPlansModal = ({ isOpen, onClose, onUpgrade }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
-      
+
       {/* Modal Container */}
       <div className="relative w-full max-w-2xl bg-white/80 backdrop-blur-2xl border border-white/60 rounded-signal-xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col z-50 text-left">
         {/* Header */}
@@ -322,8 +329,8 @@ const PremiumPlansModal = ({ isOpen, onClose, onUpgrade }) => {
                   </li>
                 </ul>
               </div>
-              <button 
-                onClick={onUpgrade} 
+              <button
+                onClick={onUpgrade}
                 className="w-full mt-6 py-2 px-4 rounded-signal-md text-xs font-bold bg-accent hover:bg-accent-secondary text-white shadow-md hover:shadow-lg transition-all"
               >
                 Upgrade to Premium
@@ -374,7 +381,7 @@ const BYOKWidget = ({
   userId
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  
+
   // Local/Temporary draft state - does not modify the global state until Saved
   const [tempProvider, setTempProvider] = React.useState(byokProvider);
   const [tempGeminiKey, setTempGeminiKey] = React.useState(byokGeminiKey);
@@ -476,7 +483,7 @@ const BYOKWidget = ({
       localStorage.setItem(`byok_groq_key_${suffix}`, backupKeys.groq || '');
       localStorage.setItem(`byok_openrouter_key_${suffix}`, backupKeys.openrouter || '');
       localStorage.setItem(`byok_model_${suffix}`, backupKeys.model || '');
-      
+
       setValidationError(err.message || 'Key validation failed. Please check inputs.');
     } finally {
       setIsValidating(false);
@@ -485,7 +492,7 @@ const BYOKWidget = ({
 
   return (
     <div className="mt-4 pt-4 border-t border-white/10">
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between text-secondary hover:text-primary transition-colors py-1 text-left focus:outline-none"
       >
@@ -629,13 +636,13 @@ const BYOKWidget = ({
             onClick={onOpenGuide}
             className="w-full text-left text-[10px] font-bold text-accent hover:text-accent-secondary flex items-center gap-1 focus:outline-none"
           >
-            <span>💡 Setup Guide & Free Keys</span>
+            <span>ðŸ’¡ Setup Guide & Free Keys</span>
           </button>
 
           {/* Validation Feedback & Save Action */}
           {validationError && (
             <div className="text-[10px] text-red-600 bg-red-50 border border-red-200 rounded-signal-md p-2 leading-normal">
-              ⚠️ {validationError}
+              âš ï¸ {validationError}
             </div>
           )}
           {validationSuccess && (
@@ -675,7 +682,7 @@ const renderUserTierBadge = (provider, model, isPremium) => {
       </span>
     );
   }
-  
+
   if (provider === 'default' || !provider) {
     return (
       <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full select-none">
@@ -684,7 +691,7 @@ const renderUserTierBadge = (provider, model, isPremium) => {
       </span>
     );
   }
-  
+
   if (provider === 'gemini') {
     return (
       <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded-full select-none">
@@ -722,6 +729,666 @@ const renderUserTierBadge = (provider, model, isPremium) => {
   }
 };
 
+// â”€â”€ ATS (Applicant Tracking System) Job Targeting Tab (B.5) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const ScoreGauge = ({ score }) => {
+  const color = score >= 80 ? '#14b8a6' : score >= 55 ? '#f59e0b' : '#ef4444';
+  const circumference = 2 * Math.PI * 36;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div className="relative flex items-center justify-center w-24 h-24">
+      <svg width="96" height="96" viewBox="0 0 96 96" className="absolute">
+        <circle cx="48" cy="48" r="36" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+        <circle cx="48" cy="48" r="36" fill="none" stroke={color} strokeWidth="8"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round" transform="rotate(-90 48 48)"
+          style={{ transition: 'stroke-dashoffset 1s ease' }} />
+      </svg>
+      <div className="flex flex-col items-center">
+        <span className="text-2xl font-black text-slate-900">{score}</span>
+        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Match</span>
+      </div>
+    </div>
+  );
+};
+
+const ATSJobTargetingTab = ({ mode = 'analyzer', user, token, resumes, onUpgrade, byokProvider, byokGeminiKey, byokOpenAIKey, byokGroqKey, byokOpenRouterKey, byokModel, onInterviewStarted }) => {
+  const [jobInputMode, setJobInputMode] = React.useState('url');
+  const [jobUrl, setJobUrl] = React.useState('');
+  const [companyUrl, setCompanyUrl] = React.useState('');
+  const [pasteInput, setPasteInput] = React.useState('');
+  const [selectedResumeId, setSelectedResumeId] = React.useState(resumes[0]?.id || '');
+  const [scrapingJob, setScrapingJob] = React.useState(false);
+  const [scrapingCompany, setScrapingCompany] = React.useState(false);
+  const [analyzing, setAnalyzing] = React.useState(false);
+  const [scrapedJD, setScrapedJD] = React.useState('');
+  const [scrapedCompany, setScrapedCompany] = React.useState('');
+  const [result, setResult] = React.useState(null);
+  const [error, setError] = React.useState('');
+  const [activeResultTab, setActiveResultTab] = React.useState('score');
+  const [premiumDifficulty, setPremiumDifficulty] = React.useState('Mid-Level');
+  const [launchingPremiumInterview, setLaunchingPremiumInterview] = React.useState(false);
+
+  const [history, setHistory] = React.useState([]);
+  const [loadingHistory, setLoadingHistory] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const hdrs = {
+    'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json',
+    ...(byokProvider && byokProvider !== 'default' && { 'X-User-Provider': byokProvider }),
+    ...(byokGeminiKey && { 'X-User-Gemini-Key': byokGeminiKey }),
+    ...(byokOpenAIKey && { 'X-User-OpenAI-Key': byokOpenAIKey }),
+    ...(byokGroqKey && { 'X-User-Groq-Key': byokGroqKey }),
+    ...(byokOpenRouterKey && { 'X-User-OpenRouter-Key': byokOpenRouterKey }),
+    ...(byokModel && { 'X-User-Model': byokModel }),
+  };
+
+  const fetchHistory = async () => {
+    if (!user?.is_premium) return;
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ats/history`, { headers: hdrs });
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data);
+      }
+    } catch (e) {
+      console.error('Failed to load ATS history', e);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchHistory();
+  }, [user?.is_premium, mode]);
+
+  React.useEffect(() => {
+    setResult(null);
+  }, [mode]);
+
+  const scrapeJob = async () => {
+    setError(''); setScrapedJD(''); setResult(null); setScrapingJob(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ats/scrape-job`, { method: 'POST', headers: hdrs, body: JSON.stringify({ url: jobUrl }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to scrape job URL');
+      setScrapedJD(data.text);
+    } catch (e) { setError(e.message); } finally { setScrapingJob(false); }
+  };
+
+  const scrapeCompany = async () => {
+    setError(''); setScrapedCompany(''); setScrapingCompany(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ats/scrape-company`, { method: 'POST', headers: hdrs, body: JSON.stringify({ url: companyUrl }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to scrape company URL');
+      setScrapedCompany(data.text);
+    } catch (e) { setError(e.message); } finally { setScrapingCompany(false); }
+  };
+
+  const runAnalysis = async () => {
+    const jd = jobInputMode === 'url' ? scrapedJD : pasteInput;
+    if (!jd || jd.trim().length < 50) { setError('Please provide a valid job description first.'); return; }
+    if (!selectedResumeId) { setError('Please select a resume.'); return; }
+    setError(''); setResult(null); setAnalyzing(true);
+
+    let extractedCompany = null;
+    if (companyUrl) {
+      try {
+        extractedCompany = new URL(companyUrl).hostname.replace('www.', '').split('.')[0];
+        if (extractedCompany) {
+          extractedCompany = extractedCompany.charAt(0).toUpperCase() + extractedCompany.slice(1);
+        }
+      } catch (e) {
+        extractedCompany = companyUrl;
+      }
+    }
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/ats/analyze`, {
+        method: 'POST', headers: hdrs,
+        body: JSON.stringify({
+          resume_id: selectedResumeId,
+          job_description: jd,
+          company_context: scrapedCompany,
+          job_url: jobInputMode === 'url' ? jobUrl : null,
+          company_name: extractedCompany
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+      setResult(data); setActiveResultTab('score');
+      fetchHistory();
+    } catch (e) { setError(e.message); } finally { setAnalyzing(false); }
+  };
+
+  const startPremiumInterview = async () => {
+    if (!selectedResumeId) { setError('Please select a resume first.'); return; }
+    setError(''); setLaunchingPremiumInterview(true);
+    try {
+      const finalRole = result?.role_detected || 'Software Engineer';
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/interviews`, {
+        method: 'POST',
+        headers: hdrs,
+        body: JSON.stringify({
+          resume_id: selectedResumeId || null,
+          role: finalRole,
+          difficulty: premiumDifficulty,
+          job_description: jobInputMode === 'url' ? scrapedJD : pasteInput,
+          company_context: scrapedCompany || null
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Failed to start premium mock interview.');
+      }
+
+      const interviewData = await response.json();
+      onInterviewStarted(interviewData);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Something went wrong while generating the questions.');
+    } finally {
+      setLaunchingPremiumInterview(false);
+    }
+  };
+
+  if (!user?.is_premium) {
+    if (mode === 'history') {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 max-w-md mx-auto py-8">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 flex items-center justify-center shadow-lg relative">
+            <Lock className="w-8 h-8 text-amber-600" />
+            <Sparkles className="w-5 h-5 text-amber-500 absolute -top-1 -right-1 fill-amber-500 animate-pulse" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-black tracking-tight text-slate-900">Past Job Ready Resume</h1>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-1">Exclusive Premium Archive</p>
+            <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+              Access your database-saved resume matching reports, job-ready checklists, and tailored bullet point revisions across all target companies.
+            </p>
+          </div>
+          <button
+            onClick={onUpgrade}
+            className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider flex items-center gap-1.5"
+          >
+            Upgrade to Premium <Sparkles className="w-4 h-4 fill-white/10" />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-5 max-w-md mx-auto">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 flex items-center justify-center shadow-md">
+          <ShieldCheck className="w-9 h-9 text-amber-500" />
+        </div>
+        <div>
+          <h1 className="font-display text-2xl font-black tracking-tight text-slate-900">Job Targeting & ATS</h1>
+          <p className="text-[11px] text-slate-400 font-medium mt-0.5">(Applicant Tracking System)</p>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">Paste any job URL + company homepage to get your ATS match score, keyword gaps, company-aware interview questions, and specific resume edits.</p>
+        </div>
+        <div className="w-full glass-panel rounded-xl p-4 text-left space-y-2">
+          {[
+            'ATS Match Score Gauge (0-100)',
+            'Company Background Scraper',
+            'Missing Keyword Gap Grid',
+            '3 Tailored Resume Bullet Points',
+            '5 Company-Aware Interview Questions',
+            'Resume Section Edit Suggestions',
+            'ATS Formatting Checklist'
+          ].map(f => (
+            <div key={f} className="flex items-center gap-2 text-sm text-slate-700">
+              <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" /><span>{f}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={onUpgrade} className="btn-primary px-8 py-3 text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg">
+          <Sparkles className="w-4 h-4 fill-white/30" /> Upgrade to Premium — Rs. 199/mo
+        </button>
+      </div>
+    );
+  }
+
+  const scoreColor = result ? (result.match_score >= 80 ? 'text-teal-600' : result.match_score >= 55 ? 'text-amber-600' : 'text-red-500') : '';
+  const RESULT_TABS = [
+    { id: 'score', label: 'Score', icon: Award },
+    { id: 'keywords', label: 'Keywords', icon: Key },
+    { id: 'edits', label: 'Resume Edits', icon: Edit },
+    { id: 'checklist', label: 'ATS Checklist', icon: CheckCircle2 },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl">
+      {/* Left Column: Past Job Ready Resumes (History) */}
+      {mode === 'history' && (
+        <div className="lg:col-span-4 space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <History className="w-4 h-4 text-slate-400" />
+              past job ready resumes
+            </h3>
+            <span className="text-[9px] font-black text-teal-600 bg-teal-500/10 border border-teal-200/20 px-2 py-0.5 rounded-full select-none">
+              Premium Bank
+            </span>
+          </div>
+
+          {/* Search bar inside glassmorphic pattern */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search company or target role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 bg-white/40 border border-white/60 rounded-full text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:bg-white/60 shadow-inner backdrop-blur-sm transition-all"
+            />
+          </div>
+
+          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+            {loadingHistory ? (
+              <div className="flex items-center justify-center p-6 text-slate-400 text-xs">
+                <Loader2 className="w-4 h-4 animate-spin text-teal-600 mr-2" />
+                Loading history...
+              </div>
+            ) : history.length === 0 ? (
+              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-6 text-center text-xs text-slate-400">
+                No past scans recorded yet. Run your first analysis in the Job Targeting tab!
+              </div>
+            ) : (
+              (() => {
+                const filtered = history.filter(record => 
+                  (record.company_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (record.role_detected || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (record.resume_name || '').toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center text-xs text-slate-400 py-6">
+                      No matching records found.
+                    </div>
+                  );
+                }
+                return filtered.map((record) => {
+                  const isSelected = result?.id === record.id;
+                  return (
+                    <button
+                      key={record.id}
+                      onClick={() => {
+                        if (record.analysis_result) {
+                          setResult({
+                            ...record.analysis_result,
+                            id: record.id,
+                            resume_id: record.resume_id,
+                            resume_name: record.resume_name
+                          });
+                          setSelectedResumeId(record.resume_id);
+                          setActiveResultTab('score');
+                        }
+                      }}
+                      className={`w-full text-left p-4 rounded-xl transition-all duration-300 flex flex-col gap-3 relative overflow-hidden ${
+                        isSelected
+                          ? 'bg-teal-500/10 backdrop-blur-md border border-teal-500/40 text-slate-800 shadow-md ring-1 ring-teal-500/20'
+                          : 'glass-panel hover:bg-white/45 border border-white/40 text-slate-700 hover:scale-[1.01]'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-2 w-full">
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-700 border border-teal-200/20">
+                            {record.company_name || 'Target Corp'}
+                          </span>
+                          <h4 className="font-display font-black text-xs truncate mt-2 leading-tight text-slate-900">
+                            {record.role_detected || 'Software Engineer'}
+                          </h4>
+                        </div>
+                        {record.match_score !== null && (
+                          <div className="text-right shrink-0">
+                            <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-400">Score</span>
+                            <span className="text-sm font-black leading-none text-teal-600">
+                              {record.match_score}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1.5 text-[10px] pt-2 border-t border-slate-200/60">
+                        <div className="flex items-center gap-1.5 text-slate-500">
+                          <FileText className="w-3.5 h-3.5 shrink-0 text-teal-600" />
+                          <span className="truncate">Resume: <strong className="text-slate-800">{record.resume_name || 'Selected Resume'}</strong></span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-200/20">
+                            <Sparkles className="w-2 h-2 fill-current animate-pulse text-amber-500" />
+                            Premium Mock Ready
+                          </span>
+                          <span className="font-black text-[9px] flex items-center gap-0.5 text-teal-600">
+                            {isSelected ? 'Loaded ✓' : 'Load Scan →'}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                });
+              })()
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Right Column: Main Analysis Form & Active Results */}
+      <div className={`${mode === 'history' ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-6`}>
+        <div>
+          <h1 className="font-display text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+            {mode === 'history' ? (
+              <>
+                <History className="w-6 h-6 text-teal-500" /> Past Job Ready Resume
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-6 h-6 text-teal-500" /> Job Targeting & ATS Analyzer
+              </>
+            )}
+          </h1>
+          <p className="text-[11px] text-slate-400 font-medium">
+            {mode === 'history' ? '(Saved ATS Scorecards & Job Ready Feedbacks)' : '(Applicant Tracking System)'}
+          </p>
+          <p className="text-sm text-slate-500 mt-1">
+            {mode === 'history'
+              ? 'Review your past resume scans, change resume context, view scorecards, or launch Premium Mock Loops for targeted jobs.'
+              : 'Scrape a job posting + company homepage, pick your resume, and get a full ATS (Applicant Tracking System) scorecard with company-specific interview prep.'
+            }
+          </p>
+        </div>
+
+        {/* Input Card */}
+        {mode === 'analyzer' && (
+          <div className="glass-panel rounded-xl p-6 space-y-5">
+
+        {/* Step 1: Job Description */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+            <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Job Description</span>
+          </div>
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-lg w-fit">
+            {[
+              { id: 'url', label: 'Scan Job URL', icon: Link },
+              { id: 'paste', label: 'Paste Job Description', icon: FileText }
+            ].map(m => {
+              const Icon = m.icon;
+              return (
+                <button key={m.id} onClick={() => setJobInputMode(m.id)}
+                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${jobInputMode === m.id ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+          {jobInputMode === 'url' ? (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input type="url" value={jobUrl} onChange={e => setJobUrl(e.target.value)}
+                  placeholder="https://careers.spglobal.com/jobs/329519?lang=en-us"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 text-slate-900 placeholder:text-slate-400" />
+                <button onClick={scrapeJob} disabled={scrapingJob || !jobUrl}
+                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-xl disabled:opacity-50 flex items-center gap-2 shrink-0 transition-all">
+                  {scrapingJob ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                  {scrapingJob ? 'Scanning...' : 'Scan Job'}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-medium bg-slate-50 border border-slate-100 p-2.5 rounded-lg flex items-start gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Tip:</strong> Go to the target company's careers portal, select the specific role you want to apply for, and copy the full page URL. Paste it here to scan. (e.g. <em>https://careers.spglobal.com/jobs/329519?lang=en-us</em>)
+                </span>
+              </p>
+              {scrapedJD && <div className="p-2.5 bg-teal-50 border border-teal-200 rounded-lg text-xs text-teal-700 font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Job description extracted — {scrapedJD.length.toLocaleString()} characters.
+              </div>}
+            </div>
+          ) : (
+            <textarea value={pasteInput} onChange={e => setPasteInput(e.target.value)}
+              placeholder="Paste the full job description — requirements, responsibilities, preferred skills..."
+              rows={6} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 text-slate-900 placeholder:text-slate-400 resize-none" />
+          )}
+        </div>
+
+        {/* Step 2: Company Information */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+            <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Company Link / Portal <span className="text-slate-400 font-medium normal-case">(optional but recommended)</span></span>
+          </div>
+          <div className="flex gap-2">
+            <input type="url" value={companyUrl} onChange={e => setCompanyUrl(e.target.value)}
+              placeholder="e.g. https://en.wikipedia.org/wiki/S%26P_Global or an engineering blog / about page"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 text-slate-900 placeholder:text-slate-400" />
+            <button onClick={scrapeCompany} disabled={scrapingCompany || !companyUrl}
+              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-xl disabled:opacity-50 flex items-center gap-2 shrink-0 transition-all">
+              {scrapingCompany ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+              {scrapingCompany ? 'Scanning...' : 'Scan Company'}
+            </button>
+          </div>
+          {scrapedCompany && (
+            <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Company details scanned successfully — {scrapedCompany.length.toLocaleString()} characters loaded.
+            </div>
+          )}
+          <p className="text-[11px] text-slate-400 leading-relaxed font-medium bg-slate-50 border border-slate-100 p-3 rounded-lg flex items-start gap-2 shadow-sm">
+            <HelpCircle className="w-4 h-4 text-teal-500 shrink-0 mt-0.5" />
+            <span>
+              <strong>Tip for best results:</strong> S&P Global and other major websites block automated scans of their main homepage. 
+              Instead, paste a link to their **Wikipedia page**, their **Engineering Blog**, or a public **About page** that details their history, structure, products, and tech stack. 
+              We will scan whatever page you provide to generate matching, project-specific interview questions!
+            </span>
+          </p>
+        </div>
+
+        {/* Step 3: Resume */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+            <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Select Resume</span>
+          </div>
+          <select value={selectedResumeId} onChange={e => setSelectedResumeId(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400">
+            {resumes.length === 0 ? <option>No resumes — please upload one first</option>
+              : resumes.map(r => <option key={r.id} value={r.id}>{r.file_name}</option>)}
+          </select>
+        </div>
+
+        {error && <p className="text-xs text-red-500 font-medium bg-red-50 px-3 py-2 rounded-lg border border-red-200">{error}</p>}
+
+        <button onClick={runAnalysis}
+          disabled={analyzing || resumes.length === 0 || (jobInputMode === 'url' && !scrapedJD) || (jobInputMode === 'paste' && pasteInput.trim().length < 50)}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2">
+          {analyzing ? <><Loader2 className="w-4 h-4 animate-spin" /> Running ATS Analysis...</> : <><ShieldCheck className="w-4 h-4" /> Run ATS (Applicant Tracking System) Analysis</>}
+        </button>
+      </div>
+      )}
+
+      {/* Placeholder in history mode when no result is selected */}
+      {mode === 'history' && !result && (
+        <div className="glass-panel p-10 rounded-2xl text-center space-y-4 max-w-lg mx-auto">
+          <History className="w-12 h-12 text-slate-300 mx-auto animate-pulse" />
+          <h3 className="font-display font-bold text-slate-800">No Past Scans Selected</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Select a past job ready resume scan from the list on the left to view its detailed scorecard, missing keywords, and specific resume edits.
+          </p>
+        </div>
+      )}
+
+      {/* Results */}
+      {result && (
+        <div className="space-y-4">
+          {/* Resume Name Indicator Bar */}
+          <div className="p-4 glass-panel border border-white/50 rounded-xl text-slate-800 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md backdrop-blur-md">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-600 shrink-0">
+                <FileText className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-slate-500">Feedback generated for resume:</p>
+                <p className="text-[11px] text-teal-600 font-bold mt-0.5 truncate max-w-[200px] sm:max-w-[320px]" title={result.resume_name || resumes.find(r => r.id === result.resume_id || r.id === selectedResumeId)?.file_name || 'Selected Resume'}>
+                  {result.resume_name || resumes.find(r => r.id === result.resume_id || r.id === selectedResumeId)?.file_name || 'Selected Resume'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Choose Resume:</span>
+              <select 
+                value={selectedResumeId} 
+                onChange={e => setSelectedResumeId(e.target.value)}
+                className="bg-white/60 text-slate-800 border border-white/80 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-teal-500 max-w-[150px] truncate backdrop-blur-sm"
+              >
+                {resumes.map(r => (
+                  <option key={r.id} value={r.id} className="bg-white text-slate-800">
+                    {r.file_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {result.mismatch_warning && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm font-medium flex items-start gap-2.5 shadow-sm">
+              <ShieldCheck className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Target Mismatch Warning</p>
+                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">{result.mismatch_warning}</p>
+              </div>
+            </div>
+          )}
+
+          {result.company_summary && (
+            <div className="glass-panel rounded-xl p-4 border-l-4 border-l-blue-400 flex gap-3">
+              <Globe className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-black text-blue-700 uppercase tracking-wider mb-1">Company Snapshot</p>
+                <p className="text-sm text-slate-700 leading-relaxed">{result.company_summary}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Result Tab Bar */}
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-xl overflow-x-auto">
+            {RESULT_TABS.map(t => {
+              const Icon = t.icon;
+              return (
+                <button key={t.id} onClick={() => setActiveResultTab(t.id)}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${activeResultTab === t.id ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Score Tab */}
+          {activeResultTab === 'score' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="glass-panel rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                <ScoreGauge score={result.match_score} />
+                <p className={`text-lg font-black mt-3 ${scoreColor}`}>
+                  {result.match_score >= 80 ? 'Strong Match' : result.match_score >= 55 ? 'Moderate Match' : 'Weak Match'}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">ATS (Applicant Tracking System) Score</p>
+                {result.role_detected && <span className="mt-3 text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full">{result.role_detected}</span>}
+              </div>
+              <div className="glass-panel rounded-xl p-5 md:col-span-2 flex flex-col justify-center space-y-3">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">AI Feedback</h3>
+                <p className="text-sm text-slate-700 leading-relaxed">{result.overall_feedback}</p>
+                <div className="flex gap-3 pt-2 text-xs font-bold text-slate-500">
+                  <span className="text-teal-600">✓ {result.matching_keywords.length} matched</span>
+                  <span className="text-red-500">✗ {result.missing_keywords.length} missing</span>
+                  <span className="text-slate-400">{result.ats_checklist.filter(c => c.passed).length}/{result.ats_checklist.length} checklist passed</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Keywords Tab */}
+          {activeResultTab === 'keywords' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="glass-panel rounded-xl p-5 space-y-3">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-teal-500" /> Matching Keywords</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.matching_keywords.length === 0 && <span className="text-xs text-slate-400">None detected.</span>}
+                  {result.matching_keywords.map(k => <span key={k} className="px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-700 text-[11px] font-semibold rounded-full">{k}</span>)}
+                </div>
+              </div>
+              <div className="glass-panel rounded-xl p-5 space-y-3">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><X className="w-3.5 h-3.5 text-red-400" /> Missing Keywords</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.missing_keywords.length === 0 && <span className="text-xs text-slate-400">None detected.</span>}
+                  {result.missing_keywords.map(k => <span key={k} className="px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 text-[11px] font-semibold rounded-full">{k}</span>)}
+                </div>
+              </div>
+              {result.bullet_suggestions.length > 0 && (
+                <div className="glass-panel rounded-xl p-5 space-y-3 md:col-span-2">
+                  <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Suggested Resume Bullets</h3>
+                  <div className="space-y-2">
+                    {result.bullet_suggestions.map((b, i) => (
+                      <div key={i} className="flex gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <span className="text-teal-500 font-black text-sm shrink-0">→</span>
+                        <p className="text-sm text-slate-700 leading-relaxed">{b}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Resume Edits Tab */}
+          {activeResultTab === 'edits' && (
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500">Specific changes to make to your resume based on this JD + company. Copy the suggested text directly.</p>
+              {result.resume_edits.map((edit, i) => (
+                <div key={i} className="glass-panel rounded-xl p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Section:</span>
+                    <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md">{edit.section}</span>
+                  </div>
+                  {edit.original && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-[10px] font-black text-red-500 uppercase mb-1">Current</p>
+                      <p className="text-xs text-red-800 leading-relaxed">{edit.original}</p>
+                    </div>
+                  )}
+                  <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                    <p className="text-[10px] font-black text-teal-600 uppercase mb-1">Suggested</p>
+                    <p className="text-xs text-teal-900 leading-relaxed font-medium">{edit.suggested}</p>
+                  </div>
+                  <p className="text-[11px] text-slate-400 italic">{edit.reason}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ATS Checklist Tab */}
+          {activeResultTab === 'checklist' && (
+            <div className="glass-panel rounded-xl p-5 space-y-3">
+              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">ATS (Applicant Tracking System) Formatting Checklist</h3>
+              <div className="space-y-2">
+                {result.ats_checklist.map((c, i) => (
+                  <div key={i} className={`flex items-center gap-3 p-2.5 rounded-lg ${c.passed ? 'bg-teal-50 border border-teal-100' : 'bg-red-50 border border-red-100'}`}>
+                    {c.passed ? <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" /> : <X className="w-4 h-4 text-red-400 shrink-0" />}
+                    <span className={`text-sm ${c.passed ? 'text-teal-800' : 'text-red-700'}`}>{c.item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      </div>
+    </div>
+  );
+};
+
+
+
 // Verification Dashboard to display auth results, resume analysis, and mock interviews
 const Dashboard = () => {
   const { user, logout, token } = useAuth();
@@ -745,6 +1412,7 @@ const Dashboard = () => {
   const [byokModel, setByokModel] = React.useState('');
   const [guideOpen, setGuideOpen] = React.useState(false);
   const [byokIntroDismissed, setByokIntroDismissed] = React.useState(false);
+  const [premiumPromoDismissed, setPremiumPromoDismissed] = React.useState(false);
 
   React.useEffect(() => {
     if (user?.id) {
@@ -756,12 +1424,13 @@ const Dashboard = () => {
       setByokOpenRouterKey(localStorage.getItem(`byok_openrouter_key_${suffix}`) || localStorage.getItem('byok_openrouter_key') || '');
       setByokModel(localStorage.getItem(`byok_model_${suffix}`) || localStorage.getItem('byok_model') || '');
       setByokIntroDismissed(localStorage.getItem(`byok_intro_dismissed_${suffix}`) === 'true');
+      setPremiumPromoDismissed(localStorage.getItem(`premium_promo_dismissed_${suffix}`) === 'true');
     }
   }, [user]);
 
   const handleByokSave = (provider, geminiKey, openaiKey, groqKey, openrouterKey, model) => {
     const suffix = user?.id || 'default';
-    
+
     localStorage.setItem(`byok_provider_${suffix}`, provider);
     localStorage.setItem(`byok_gemini_key_${suffix}`, geminiKey);
     localStorage.setItem(`byok_openai_key_${suffix}`, openaiKey);
@@ -785,14 +1454,14 @@ const Dashboard = () => {
     setByokModel(model);
   };
 
-  // Preload Razorpay script on Dashboard mount → instant popup when user clicks Upgrade
+  // Preload Razorpay script on Dashboard mount â†’ instant popup when user clicks Upgrade
   React.useEffect(() => { loadRazorpayScript(); }, []);
 
   const handleUpgrade = async () => {
     setPlansModalOpen(false); // close plans modal before opening Razorpay overlay
 
     try {
-      // Script already preloaded on mount — this resolves instantly
+      // Script already preloaded on mount â€” this resolves instantly
       const resScript = await loadRazorpayScript();
       if (!resScript) {
         alert("Failed to load Razorpay SDK. Please check your internet connection.");
@@ -863,9 +1532,9 @@ const Dashboard = () => {
       };
 
       if (orderData.is_mock) {
-        // Developer sandbox: no real keys on server — simulate payment
+        // Developer sandbox: no real keys on server â€” simulate payment
         const confirmed = window.confirm(
-          "⚠️ Developer Sandbox Mode\n\nNo Razorpay keys are configured on this server.\nSimulate a successful ₹199 payment to test the upgrade flow?"
+          "âš ï¸ Developer Sandbox Mode\n\nNo Razorpay keys are configured on this server.\nSimulate a successful â‚¹199 payment to test the upgrade flow?"
         );
         if (confirmed) {
           await options.handler({
@@ -877,7 +1546,7 @@ const Dashboard = () => {
         return;
       }
 
-      // Real keys present — open the Razorpay checkout overlay (iframe popup)
+      // Real keys present â€” open the Razorpay checkout overlay (iframe popup)
       const rzp = new window.Razorpay(options);
       rzp.open();
 
@@ -966,14 +1635,14 @@ const Dashboard = () => {
       alert(err.message || 'Error deleting resume');
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-transparent relative flex flex-col md:flex-row">
-      {/* ── Background decoration matching Auth screens ── */}
+      {/* â”€â”€ Background decoration matching Auth screens â”€â”€ */}
       <div className="fixed top-[15%] left-[12%] w-80 h-80 bg-teal-400/5 rounded-full blur-3xl animate-float pointer-events-none z-0" />
       <div className="fixed bottom-[20%] right-[15%] w-[450px] h-[450px] bg-blue-400/5 rounded-full blur-3xl animate-float pointer-events-none z-0" style={{ animationDelay: '-3s' }} />
 
-      {/* ── Sidebar Navigation (hidden during active sessions for focus mode) ── */}
+      {/* â”€â”€ Sidebar Navigation (hidden during active sessions for focus mode) â”€â”€ */}
       {!activeInterview && !completedInterviewId && (
         <>
           {/* Mobile Navigation Header */}
@@ -985,9 +1654,9 @@ const Dashboard = () => {
               </div>
               <span className="font-display font-bold tracking-tight text-[15px] text-primary">InterviewSignal</span>
             </div>
-            
+
             {/* Hamburger Toggle */}
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1.5 rounded-lg bg-white/20 border border-white/30 text-secondary hover:text-primary transition-all active:scale-95"
             >
@@ -1032,7 +1701,7 @@ const Dashboard = () => {
                   <p className="text-[11px] text-slate-600 leading-normal">
                     Upgrade to unlock company-specific targeting & advanced ATS diagnostics.
                   </p>
-                  <button 
+                  <button
                     onClick={() => {
                       setMobileMenuOpen(false);
                       setPlansModalOpen(true);
@@ -1051,6 +1720,10 @@ const Dashboard = () => {
                   { key: 'interview', icon: Brain, label: 'Interview Room' },
                   { key: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
                   { key: 'history', icon: History, label: 'Interview History' },
+                  { key: 'ats', icon: ShieldCheck, label: user?.is_premium ? 'Job Targeting & ATS' : '🔒 Job Targeting & ATS' },
+                  { key: 'past-resumes', icon: FileText, label: user?.is_premium ? 'Past Job Ready Resume' : '🔒 Past Job Ready Resume' },
+                  { key: 'premium-mock', icon: Sparkles, label: user?.is_premium ? 'Premium Mock Test' : '🔒 Premium Mock Test' },
+                  { key: 'premium-history', icon: History, label: user?.is_premium ? 'Premium Interview History' : '🔒 Premium Interview History' },
                 ].map(({ key, icon: Icon, label }) => {
                   const isActive = activeTab === key;
                   return (
@@ -1060,11 +1733,10 @@ const Dashboard = () => {
                         setActiveTab(key);
                         setMobileMenuOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${
-                        isActive
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${isActive
                           ? 'bg-accent/5 border-accent/20 text-accent shadow-sm'
                           : 'bg-white/10 border-white/20 text-secondary hover:bg-white/20 hover:text-primary hover:border-white/30'
-                      }`}
+                        }`}
                     >
                       <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
                       <span>{label}</span>
@@ -1092,11 +1764,11 @@ const Dashboard = () => {
 
               {/* Sign Out */}
               <div className="pt-4 border-t border-border/60">
-                <button 
+                <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     logout();
-                  }} 
+                  }}
                   className="w-full btn-secondary flex items-center justify-center gap-2 py-2 px-3 text-[13px]"
                 >
                   <LogOut className="w-4 h-4 text-secondary" />
@@ -1151,7 +1823,7 @@ const Dashboard = () => {
                   <p className="text-[10px] text-slate-600 leading-normal">
                     Upgrade to unlock company-specific targeting & advanced ATS diagnostics.
                   </p>
-                  <button 
+                  <button
                     onClick={() => setPlansModalOpen(true)}
                     className="w-full mt-1.5 py-1.5 px-3 rounded-signal-md text-[10px] font-black bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow transition-all text-center flex items-center justify-center gap-1"
                   >
@@ -1167,17 +1839,20 @@ const Dashboard = () => {
                   { key: 'interview', icon: Brain, label: 'Interview Room' },
                   { key: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
                   { key: 'history', icon: History, label: 'Interview History' },
+                  { key: 'ats', icon: ShieldCheck, label: user?.is_premium ? 'Job Targeting & ATS' : '🔒 Job Targeting & ATS' },
+                  { key: 'past-resumes', icon: FileText, label: user?.is_premium ? 'Past Job Ready Resume' : '🔒 Past Job Ready Resume' },
+                  { key: 'premium-mock', icon: Sparkles, label: user?.is_premium ? 'Premium Mock Test' : '🔒 Premium Mock Test' },
+                  { key: 'premium-history', icon: History, label: user?.is_premium ? 'Premium Interview History' : '🔒 Premium Interview History' },
                 ].map(({ key, icon: Icon, label }) => {
                   const isActive = activeTab === key;
                   return (
                     <button
                       key={key}
                       onClick={() => setActiveTab(key)}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${
-                        isActive
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-[13px] font-semibold rounded-signal-md transition-all duration-200 border ${isActive
                           ? 'bg-accent/5 border-accent/20 text-accent shadow-sm'
                           : 'bg-transparent border-transparent text-secondary hover:bg-white/15 hover:text-primary hover:border-white/25'
-                      }`}
+                        }`}
                     >
                       <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-secondary'}`} />
                       <span>{label}</span>
@@ -1212,11 +1887,11 @@ const Dashboard = () => {
         </>
       )}
 
-      {/* ── Main Content Area ── */}
+      {/* â”€â”€ Main Content Area â”€â”€ */}
       <main className="flex-1 min-w-0 relative z-10 flex flex-col">
         {/* Full-width container when focusing, else padded container */}
         <div className={`flex-1 w-full mx-auto ${activeInterview || completedInterviewId ? 'p-0' : 'max-w-6xl px-6 md:px-8 py-8 md:py-10'}`}>
-          
+
           {/* Ongoing Session Banner */}
           {ongoingInterview && !activeInterview && !completedInterviewId && (
             <div className="glass-panel p-4.5 rounded-signal-lg mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up border-l-4 border-l-accent shadow-sm">
@@ -1268,18 +1943,18 @@ const Dashboard = () => {
           {/* Action Modules Router */}
           {completedInterviewId ? (
             <div className="p-6 md:p-10 max-w-5xl mx-auto">
-              <EvaluationReport 
-                interviewId={completedInterviewId} 
+              <EvaluationReport
+                interviewId={completedInterviewId}
                 token={token}
                 onBackToDashboard={() => {
                   setCompletedInterviewId(null);
                   setActiveTab('resumes');
-                }} 
+                }}
               />
             </div>
           ) : activeInterview ? (
             <div className="min-h-screen">
-              <ActiveInterview 
+              <ActiveInterview
                 interview={activeInterview}
                 token={token}
                 onInterviewFinished={(interviewId) => {
@@ -1305,13 +1980,13 @@ const Dashboard = () => {
                 {/* Left Column: Upload & List (5 cols) */}
                 <div className="lg:col-span-5 space-y-6">
                   <ResumeUpload onUploadSuccess={handleUploadSuccess} />
-                  
+
                   <div className="glass-panel p-5 rounded-signal-lg">
                     <h3 className="font-display font-semibold text-primary mb-3 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-accent" />
                       <span>Your Resumes</span>
                     </h3>
-                    
+
                     {isLoading ? (
                       <div className="flex justify-center py-6">
                         <Loader2 className="w-5 h-5 animate-spin text-accent" />
@@ -1326,15 +2001,14 @@ const Dashboard = () => {
                             <button
                               key={r.id}
                               onClick={() => setSelectedResume(r)}
-                              className={`w-full text-left p-3 rounded-signal-md border transition-all duration-200 flex flex-col gap-1.5 ${
-                                isSelected
+                              className={`w-full text-left p-3 rounded-signal-md border transition-all duration-200 flex flex-col gap-1.5 ${isSelected
                                   ? 'bg-accent/5 border-accent/30 shadow-sm'
                                   : 'bg-white/10 border-white/20 hover:bg-white/25 hover:shadow-sm hover:border-white/35'
-                              }`}
+                                }`}
                             >
                               <div className="flex justify-between items-center w-full">
                                 <span className={`text-[9px] font-bold uppercase tracking-wider ${isSelected ? 'text-accent' : 'text-muted'}`}>
-                                  {new Date(r.uploaded_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
+                                  {new Date(r.uploaded_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </span>
                                 {r.skills && r.skills.length > 0 && (
                                   <span className="px-1.5 py-0.5 bg-accent/10 border border-accent/15 rounded-full text-[9px] font-semibold text-accent">
@@ -1509,11 +2183,11 @@ const Dashboard = () => {
             <div className="space-y-6">
               <div>
                 <h1 className="font-display text-2xl font-black tracking-tight text-primary">Performance Analytics</h1>
-                <p className="text-[13px] text-secondary mt-1">Track your progress and readiness metrics across categories</p>
+                <p className="text-[13px] text-secondary mt-1">Track your progress and readiness metrics across standard and premium categories</p>
               </div>
-              <PerformanceAnalytics 
-                token={token} 
-                onStartInterview={() => setActiveTab('interview')} 
+              <PerformanceAnalytics
+                token={token}
+                onStartInterview={() => setActiveTab('interview')}
               />
             </div>
           ) : activeTab === 'history' ? (
@@ -1522,32 +2196,125 @@ const Dashboard = () => {
                 <h1 className="font-display text-2xl font-black tracking-tight text-primary">Interview History</h1>
                 <p className="text-[13px] text-secondary mt-1">Review your completed mock sessions and grading transcripts</p>
               </div>
-              <InterviewHistory 
+              <InterviewHistory
                 token={token}
                 onResumeInterview={(interview) => setActiveInterview(interview)}
                 onViewReport={(id) => setCompletedInterviewId(id)}
                 onStartNew={() => setActiveTab('interview')}
               />
             </div>
+          ) : activeTab === 'ats' ? (
+            <ATSJobTargetingTab
+              key="ats-analyzer"
+              mode="analyzer"
+              user={user}
+              token={token}
+              resumes={resumes}
+              onUpgrade={() => setPlansModalOpen(true)}
+              byokProvider={byokProvider}
+              byokGeminiKey={byokGeminiKey}
+              byokOpenAIKey={byokOpenAIKey}
+              byokGroqKey={byokGroqKey}
+              byokOpenRouterKey={byokOpenRouterKey}
+              byokModel={byokModel}
+              onInterviewStarted={(interview) => {
+                setActiveInterview(interview);
+                setActiveTab('interview');
+              }}
+            />
+          ) : activeTab === 'past-resumes' ? (
+            <ATSJobTargetingTab
+              key="ats-history"
+              mode="history"
+              user={user}
+              token={token}
+              resumes={resumes}
+              onUpgrade={() => setPlansModalOpen(true)}
+              byokProvider={byokProvider}
+              byokGeminiKey={byokGeminiKey}
+              byokOpenAIKey={byokOpenAIKey}
+              byokGroqKey={byokGroqKey}
+              byokOpenRouterKey={byokOpenRouterKey}
+              byokModel={byokModel}
+              onInterviewStarted={(interview) => {
+                setActiveInterview(interview);
+                setActiveTab('interview');
+              }}
+            />
+          ) : activeTab === 'premium-mock' ? (
+            <PremiumMockInterviewTab
+              user={user}
+              token={token}
+              resumes={resumes}
+              onUpgrade={() => setPlansModalOpen(true)}
+              byokProvider={byokProvider}
+              byokGeminiKey={byokGeminiKey}
+              byokOpenAIKey={byokOpenAIKey}
+              byokGroqKey={byokGroqKey}
+              byokOpenRouterKey={byokOpenRouterKey}
+              byokModel={byokModel}
+              onInterviewStarted={(interview) => {
+                setActiveInterview(interview);
+                setActiveTab('interview');
+              }}
+            />
+          ) : activeTab === 'premium-history' ? (
+            !user?.is_premium ? (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 max-w-md mx-auto py-8">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 flex items-center justify-center shadow-lg relative">
+                  <Lock className="w-8 h-8 text-amber-600" />
+                  <Sparkles className="w-5 h-5 text-amber-500 absolute -top-1 -right-1 fill-amber-500 animate-pulse" />
+                </div>
+                <div>
+                  <h1 className="font-display text-2xl font-black tracking-tight text-slate-900">Premium Interview History</h1>
+                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-1">Exclusive Premium Feature</p>
+                  <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+                    Access history of mock interviews generated from database-saved company profiles, job descriptions, and custom grading transcripts.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPlansModalOpen(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider flex items-center gap-1.5"
+                >
+                  Upgrade to Premium <Sparkles className="w-4 h-4 fill-white/10" />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="font-display text-2xl font-black tracking-tight text-primary flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-amber-500 fill-amber-500/20" /> Premium Interview History
+                  </h1>
+                  <p className="text-[13px] text-secondary mt-1">Review your company-specific mock sessions and custom grading reports</p>
+                </div>
+                <InterviewHistory
+                  token={token}
+                  premiumOnly={true}
+                  onResumeInterview={(interview) => setActiveInterview(interview)}
+                  onViewReport={(id) => setCompletedInterviewId(id)}
+                  onStartNew={() => setActiveTab('premium-mock')}
+                />
+              </div>
+            )
           ) : (
             <div className="max-w-2xl mx-auto space-y-6 py-4">
               <div className="text-center">
                 <h1 className="font-display text-3xl font-black tracking-tight text-primary">Setup Interview Room</h1>
                 <p className="text-[13px] text-secondary mt-1.5">Configure your target role and difficulty for your AI interviewer</p>
               </div>
-              <InterviewConfig 
-                resumes={resumes} 
-                token={token} 
-                onInterviewStarted={(interview) => setActiveInterview(interview)} 
+              <InterviewConfig
+                resumes={resumes}
+                token={token}
+                onInterviewStarted={(interview) => setActiveInterview(interview)}
               />
             </div>
           )}
         </div>
       </main>
 
-      <APIKeyGuideModal 
-        isOpen={guideOpen} 
-        onClose={() => setGuideOpen(false)} 
+      <APIKeyGuideModal
+        isOpen={guideOpen}
+        onClose={() => setGuideOpen(false)}
       />
 
       <PremiumPlansModal
@@ -1568,30 +2335,78 @@ const Dashboard = () => {
               Already have an API Key? Configure Gemini, OpenAI, Groq, or OpenRouter to unlock unlimited practice sessions.
             </p>
             <div className="flex gap-2.5 mt-2.5">
-              <button 
+              <button
                 onClick={() => {
                   setMobileMenuOpen(true);
                   const suffix = user?.id || 'default';
                   setByokIntroDismissed(true);
                   localStorage.setItem(`byok_intro_dismissed_${suffix}`, 'true');
-                }} 
+                }}
                 className="text-[10px] font-bold text-accent hover:text-accent-secondary flex items-center gap-0.5"
               >
-                Configure Now →
+                Configure Now â†’
               </button>
-              <button 
-                onClick={() => setGuideOpen(true)} 
+              <button
+                onClick={() => setGuideOpen(true)}
                 className="text-[10px] font-bold text-slate-500 hover:text-slate-700"
               >
                 Get Free Keys
               </button>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => {
               const suffix = user?.id || 'default';
               setByokIntroDismissed(true);
               localStorage.setItem(`byok_intro_dismissed_${suffix}`, 'true');
+            }}
+            className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Premium Feature Alert Toast */}
+      {!premiumPromoDismissed && !user?.is_premium && (
+        <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden bg-white/95 backdrop-blur-xl border border-amber-200/80 p-4 rounded-signal-xl shadow-[0_8px_32px_rgba(245,158,11,0.15)] flex gap-3 items-start animate-slide-up">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shrink-0">
+            <Sparkles className="w-4.5 h-4.5 fill-amber-500/20" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-display font-bold text-xs text-slate-900 text-left">Upgrade to Premium</h4>
+            <p className="text-[10.5px] text-slate-600 mt-1 leading-normal text-left">
+              Get access to company-specific mock interviews, target resume diagnostics, and full historical scorecards for Rs. 199/mo.
+            </p>
+            <div className="flex gap-2.5 mt-2.5">
+              <button
+                onClick={() => {
+                  setPlansModalOpen(true);
+                  const suffix = user?.id || 'default';
+                  setPremiumPromoDismissed(true);
+                  localStorage.setItem(`premium_promo_dismissed_${suffix}`, 'true');
+                }}
+                className="text-[10px] font-black text-amber-600 hover:text-amber-700 flex items-center gap-0.5"
+              >
+                Upgrade Now →
+              </button>
+              <button
+                onClick={() => {
+                  const suffix = user?.id || 'default';
+                  setPremiumPromoDismissed(true);
+                  localStorage.setItem(`premium_promo_dismissed_${suffix}`, 'true');
+                }}
+                className="text-[10px] font-bold text-slate-500 hover:text-slate-700"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const suffix = user?.id || 'default';
+              setPremiumPromoDismissed(true);
+              localStorage.setItem(`premium_promo_dismissed_${suffix}`, 'true');
             }}
             className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
           >

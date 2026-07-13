@@ -309,8 +309,16 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
             <span className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 text-slate-700 rounded-full border border-slate-200 uppercase tracking-wider">
               {interview.difficulty}
             </span>
+            {(interview.job_description || interview.company_context) && (
+              <span className="px-2 py-0.5 text-[9px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-600 rounded-full uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                Premium Loop
+              </span>
+            )}
           </div>
-          <h2 className="font-display text-base font-black tracking-tight text-primary">Interactive Interview Room</h2>
+          <h2 className="font-display text-base font-black tracking-tight text-primary">
+            {(interview.job_description || interview.company_context) ? 'Personalized Mock Loop' : 'Interactive Interview Room'}
+          </h2>
         </div>
 
         <button 
@@ -339,6 +347,14 @@ export default function ActiveInterview({ interview, token, onInterviewFinished,
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
+
+        {(interview.job_description || interview.company_context) && (
+          <div className="px-3.5 py-2.5 bg-gradient-to-r from-amber-500/5 via-teal-500/5 to-cyan-500/5 border border-amber-500/15 rounded-lg flex items-center justify-between gap-3 text-[11.5px] text-slate-500">
+            <span className="leading-relaxed text-left">
+              🔒 <strong>Premium Session:</strong> This mock interview loop is customized to reference actual projects, system engineering challenges, and tech stack requirements found in the target job spec and company history.
+            </span>
+          </div>
+        )}
 
         {/* Bubble Question Pills */}
         <div className="flex justify-center gap-1.5 pt-1">

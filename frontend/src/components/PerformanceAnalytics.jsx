@@ -168,7 +168,7 @@ const PerformanceAnalytics = ({ token, onStartInterview }) => {
               <TrendingUp className="w-4 h-4 text-accent" />
               <span>Score Improvement Journey</span>
             </h3>
-            <p className="text-[11px] text-secondary mt-0.5">Chronological record of mock interview scores</p>
+            <p className="text-[11px] text-secondary mt-0.5">Chronological record of standard and premium mock interview scores</p>
           </div>
 
           <div className="my-4 relative flex justify-center items-center w-full">
