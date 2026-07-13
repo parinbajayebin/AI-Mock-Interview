@@ -11,7 +11,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }) => {
+const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew, premiumOnly = false }) => {
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +36,11 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
       });
       if (!res.ok) throw new Error("Failed to load interview history.");
       const json = await res.json();
-      setInterviews(json);
+      const filtered = json.filter(item => {
+        const isPremium = !!(item.job_description || item.company_context);
+        return premiumOnly ? isPremium : !isPremium;
+      });
+      setInterviews(filtered);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -51,7 +55,7 @@ const InterviewHistory = ({ token, onResumeInterview, onViewReport, onStartNew }
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchRole, difficulty, status]);
+  }, [searchRole, difficulty, status, premiumOnly]);
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();
