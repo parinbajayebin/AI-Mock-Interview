@@ -23,7 +23,7 @@ An advanced, production-grade SaaS-inspired platform designed to help candidates
 * **Privacy Focused**: Custom API keys are stored securely on the client-side (`localStorage`) with zero host database tracking.
 * **Resource Limiting**: Users without custom keys receive a set of free mock interviews, after which they are seamlessly prompted to insert their own key or upgrade to Premium.
 
-### 🎯 2. ATS & Job Targeting Analyzer (Premium)
+### 🎯 2. ATS (Applicant Tracking System) & Job Targeting Analyzer (Premium)
 * **Smart URL Scraper**: Fetches active job postings from Lever, Greenhouse, Workday, LinkedIn, or direct company career pages and extracts clean job description details.
 * **ATS Scorecard**: Calculates a match score (%) indicating how well the candidate's resume aligns with the target job posting.
 * **Keyword Gaps & Rewrite Tips**: Identifies missing technical/soft keywords and provides context-rich bullet point edits to upgrade the resume.
@@ -95,18 +95,21 @@ AI-Mock-Interview/
    ```
 
 2. **Configure Environment Variables**:
-   Create a `.env` file in the root directory:
+   Create a `.env` file in the root directory. Follow this template (see `.env.example` for details):
    ```env
-   # Database Credentials
+   # PostgreSQL database connection URL (either local Postgres container or external Neon/Supabase DB)
+   DATABASE_URL=postgresql+asyncpg://postgres:postgres_secure_pass@db:5432/ai_mock_interview
+
+   # Database Credentials for internal container setup
    POSTGRES_USER=postgres
    POSTGRES_PASSWORD=postgres_secure_pass
    POSTGRES_DB=ai_mock_interview
-   DATABASE_URL=postgresql+asyncpg://postgres:postgres_secure_pass@db:5432/ai_mock_interview
 
-   # LLM Integration
+   # Google Gemini API Key
+   # 👉 Get yours for FREE at: https://aistudio.google.com/
    GEMINI_API_KEY=your_gemini_api_key
 
-   # Authentication
+   # JWT Token Authentication Keys
    JWT_SECRET_KEY=your_super_secure_jwt_secret
    ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=60
