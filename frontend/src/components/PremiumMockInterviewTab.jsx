@@ -4,11 +4,9 @@ import {
   Brain, 
   History, 
   FileText, 
-  ArrowRight, 
   Loader2, 
   ExternalLink,
   Lock,
-  ChevronRight,
   TrendingUp,
   AlertCircle,
   Search
