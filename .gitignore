@@ -80,3 +80,12 @@ Thumbs.db
 *.njsproj
 *.sln
 *.user
+
+# Temporary check scripts
+backend/check_analysis.py
+backend/check_db.py
+backend/requirenments.txt
+frontend/find_byokwidget.py
+frontend/find_missing_imports.py
+frontend/scan_imports.py
+
