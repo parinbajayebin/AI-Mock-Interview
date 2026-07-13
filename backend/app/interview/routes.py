@@ -83,6 +83,13 @@ async def create_interview(
             )
         resume_text = resume.raw_text
 
+    # Check premium access: job_description or company_context require premium status
+    if (payload.job_description or payload.company_context) and not current_user.is_premium:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Company & Job-specific mock interviews are premium features. Please upgrade your account to launch themed interview loops."
+        )
+
     # 2. Fetch past question texts to avoid repetitions
     past_questions = await interview_repo.get_past_question_texts(current_user.id, payload.role)
 
@@ -92,7 +99,9 @@ async def create_interview(
         difficulty=payload.difficulty,
         resume_text=resume_text,
         past_questions=past_questions,
-        user_keys=user_keys
+        user_keys=user_keys,
+        job_description=payload.job_description,
+        company_context=payload.company_context
     )
 
     if not questions_data:
@@ -107,7 +116,9 @@ async def create_interview(
         role=payload.role,
         difficulty=payload.difficulty,
         resume_id=payload.resume_id,
-        questions_data=questions_data
+        questions_data=questions_data,
+        job_description=payload.job_description,
+        company_context=payload.company_context
     )
 
     return interview

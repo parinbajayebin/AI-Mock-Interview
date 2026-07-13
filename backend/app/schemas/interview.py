@@ -18,6 +18,8 @@ class InterviewCreate(BaseModel):
     resume_id: Optional[uuid.UUID] = None
     role: str = Field(..., max_length=100)
     difficulty: str = Field(..., max_length=50)
+    job_description: Optional[str] = None
+    company_context: Optional[str] = None
 
 class InterviewResponse(BaseModel):
     id: uuid.UUID
@@ -26,6 +28,8 @@ class InterviewResponse(BaseModel):
     role: str
     difficulty: str
     status: str
+    job_description: Optional[str] = None
+    company_context: Optional[str] = None
     created_at: datetime
     questions: List[QuestionResponse] = []
 

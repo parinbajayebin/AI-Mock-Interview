@@ -15,7 +15,9 @@ class InterviewRepository:
         role: str,
         difficulty: str,
         resume_id: Optional[uuid.UUID],
-        questions_data: List[dict]
+        questions_data: List[dict],
+        job_description: Optional[str] = None,
+        company_context: Optional[str] = None
     ) -> Interview:
         """
         Creates a new interview and its associated questions in a single transaction.
@@ -25,7 +27,9 @@ class InterviewRepository:
             role=role,
             difficulty=difficulty,
             resume_id=resume_id,
-            status="Created"
+            status="Created",
+            job_description=job_description,
+            company_context=company_context
         )
         self.db.add(interview)
         await self.db.flush()  # Flushes to generate the interview.id

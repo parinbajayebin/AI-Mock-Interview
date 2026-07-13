@@ -300,11 +300,13 @@ async def generate_interview_questions(
     difficulty: str,
     resume_text: str | None = None,
     past_questions: list[str] | None = None,
-    user_keys: UserAPIKeys = None
+    user_keys: UserAPIKeys = None,
+    job_description: str | None = None,
+    company_context: str | None = None
 ) -> list[dict]:
     """
     Generates 5 tailored technical interview questions based on target role, difficulty,
-    and optional resume text/skills.
+    optional resume text, scraped job description, and company context (history, projects, etc.).
     """
     has_keys = settings.GEMINI_API_KEY or settings.GROQ_API_KEY or settings.OPENROUTER_API_KEY or (user_keys and (user_keys.gemini_key or user_keys.openai_key))
     if not has_keys:
@@ -321,19 +323,29 @@ async def generate_interview_questions(
     if resume_text:
         resume_context = f"\nUse the candidate's resume/experience/skills to craft some personalized questions:\nResume Text:\n{resume_text}"
 
+    job_context = ""
+    if job_description:
+        job_context = f"\nTarget Job Description (Requirements, Responsibilities, Tech Stack):\n{job_description}"
+
+    comp_context = ""
+    if company_context:
+        comp_context = f"\nCompany Context (History, Products, Projects, Initiatives):\n{company_context}"
+
     prompt = f"""
     You are an elite technical interviewer. Generate EXACTLY 5 high-quality, challenging technical questions for a candidate.
     
     Target Role: {role}
     Difficulty: {difficulty}
     {resume_context}
+    {job_context}
+    {comp_context}
     {past_questions_context}
 
     To make the interview diverse, engaging, and realistic, mix the following question types:
-    1. 1-2 Project/Experience-Specific Questions: Ask questions directly related to a project or experience mentioned in their resume (only if resume text is provided).
-    2. 1 Coding/Debugging Question: Provide a small code snippet with a bug, or ask them to write/explain code to solve a specific problem.
-    3. 1 Multiple-Choice (MCQ) Scenario Question: Describe a scenario, present 3-4 options (A, B, C, D), and ask them to choose one and justify their choice.
-    4. 1-2 Conceptual/Architectural Questions: Drill down into core concepts, performance, microservices, scaling, database optimizations, or caching suitable for the difficulty level.
+    1. 1-2 Project/Experience-Specific Questions: Ask questions directly related to a project or experience mentioned in their resume (only if resume text is provided). If job_description or company_context is provided, these questions MUST directly probe how their experience aligns with the company's real projects, initiatives, or stack (e.g. migrating ratings engine to AWS EKS at S&P Global).
+    2. 1 Coding/Debugging Question: Provide a small code snippet with a bug, or ask them to write/explain code to solve a specific problem. Try to theme this coding problem around the company's business domain or engineering challenge (e.g. data pipelines, transactional verification, API gateways).
+    3. 1 Multiple-Choice (MCQ) Scenario Question: Describe a scenario, present 3-4 options (A, B, C, D), and ask them to choose one and justify their choice. The scenario should be inspired by the company's actual technical ecosystem or engineering constraints.
+    4. 1-2 Conceptual/Architectural Questions: Drill down into core concepts, performance, microservices, scaling, database optimizations, or caching suitable for the difficulty level, tied specifically to requirements from the job description and the company's tech stack.
 
     Difficulty Constraints:
     - Entry-Level: Focus on syntax, standard libraries, basic data structures, OOP principles, and simple logic.

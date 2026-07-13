@@ -28,6 +28,8 @@ class Interview(Base):
     role: Mapped[str] = mapped_column(String(100), nullable=False)
     difficulty: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="Created", nullable=False)
+    job_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    company_context: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
