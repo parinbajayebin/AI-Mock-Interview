@@ -187,6 +187,43 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
   );
 };
 
+const PaymentSuccessModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      {/* Light transparent backdrop */}
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-lg" onClick={onClose} />
+
+      {/* Card — light glass theme */}
+      <div className="relative w-full max-w-sm bg-white/80 backdrop-blur-2xl border border-slate-200/80 rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center z-10">
+        {/* Teal glow checkmark */}
+        <div className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center mb-5 ring-4 ring-teal-100 shadow-[0_0_32px_rgba(20,184,166,0.25)]">
+          <svg className="w-10 h-10 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+
+        <h2 className="text-2xl font-black text-slate-900 mb-1 tracking-tight">Payment Successful!</h2>
+        <p className="text-sm text-slate-500 mb-1">Your account has been upgraded to</p>
+        <span className="inline-flex items-center gap-1.5 text-amber-600 font-bold text-sm mb-5">
+          <Sparkles className="w-4 h-4 fill-amber-400" />
+          Premium Tier
+        </span>
+
+        <p className="text-xs text-slate-400 mb-6">Page will reload to apply your new benefits.</p>
+
+        <button
+          onClick={() => { onClose(); window.location.reload(); }}
+          className="w-full py-2.5 px-6 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-sm transition-all shadow-md hover:shadow-teal-500/30"
+        >
+          Continue to Dashboard
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const PremiumPlansModal = ({ isOpen, onClose, onUpgrade }) => {
   if (!isOpen) return null;
 
@@ -697,6 +734,7 @@ const Dashboard = () => {
   const [ongoingInterview, setOngoingInterview] = React.useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [plansModalOpen, setPlansModalOpen] = React.useState(false);
+  const [paymentSuccessOpen, setPaymentSuccessOpen] = React.useState(false);
 
   // BYOK State Management
   const [byokProvider, setByokProvider] = React.useState('default');
@@ -747,10 +785,14 @@ const Dashboard = () => {
     setByokModel(model);
   };
 
+  // Preload Razorpay script on Dashboard mount → instant popup when user clicks Upgrade
+  React.useEffect(() => { loadRazorpayScript(); }, []);
+
   const handleUpgrade = async () => {
     setPlansModalOpen(false); // close plans modal before opening Razorpay overlay
 
     try {
+      // Script already preloaded on mount — this resolves instantly
       const resScript = await loadRazorpayScript();
       if (!resScript) {
         alert("Failed to load Razorpay SDK. Please check your internet connection.");
@@ -798,8 +840,7 @@ const Dashboard = () => {
             });
 
             if (verifyRes.ok) {
-              alert("🎉 Payment Successful! Your account has been upgraded to Premium.");
-              window.location.reload();
+              setPaymentSuccessOpen(true);
             } else {
               const err = await verifyRes.json();
               alert(err.detail || "Payment verification failed. Please contact support.");
@@ -1558,6 +1599,12 @@ const Dashboard = () => {
           </button>
         </div>
       )}
+
+      {/* Payment Success Popup */}
+      <PaymentSuccessModal
+        isOpen={paymentSuccessOpen}
+        onClose={() => setPaymentSuccessOpen(false)}
+      />
     </div>
   );
 };
