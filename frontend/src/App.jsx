@@ -748,6 +748,8 @@ const Dashboard = () => {
   };
 
   const handleUpgrade = async () => {
+    setPlansModalOpen(false); // close plans modal before opening Razorpay overlay
+
     try {
       const resScript = await loadRazorpayScript();
       if (!resScript) {
@@ -764,22 +766,22 @@ const Dashboard = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create order on payment gateway.');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Failed to create order on payment gateway.');
       }
 
       const orderData = await response.json();
 
-      // 2. Options for Razorpay checkout window
+      // 2. Build Razorpay checkout options (same pattern as Cravify)
       const options = {
         key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "InterviewSignal Premium",
-        description: "Unlock Unlimited Mocks & Company Targeting",
-        image: "https://aistudio.google.com/static/images/logo.png",
+        amount: orderData.amount,        // already in paise from backend
+        currency: orderData.currency || 'INR',
+        name: 'InterviewSignal',
+        description: '₹199/month · Premium Subscription',
         order_id: orderData.order_id,
         handler: async function (paymentRes) {
-          // Triggered on successful checkout
+          // Called by Razorpay on successful payment
           try {
             const verifyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/payments/verify`, {
               method: 'POST',
@@ -789,48 +791,55 @@ const Dashboard = () => {
               },
               body: JSON.stringify({
                 razorpay_order_id: paymentRes.razorpay_order_id || orderData.order_id,
-                razorpay_payment_id: paymentRes.razorpay_payment_id || 'pay_mock_id',
-                razorpay_signature: paymentRes.razorpay_signature || 'sig_mock_id',
+                razorpay_payment_id: paymentRes.razorpay_payment_id,
+                razorpay_signature: paymentRes.razorpay_signature,
                 is_mock: orderData.is_mock
               })
             });
 
             if (verifyRes.ok) {
-              alert("Payment Verified! Your account is upgraded to Premium!");
+              alert("🎉 Payment Successful! Your account has been upgraded to Premium.");
               window.location.reload();
             } else {
               const err = await verifyRes.json();
-              alert(err.detail || "Payment verification failed.");
+              alert(err.detail || "Payment verification failed. Please contact support.");
             }
           } catch (e) {
             console.error("Verification error:", e);
-            alert("Verification failed due to network error.");
+            alert("Verification failed due to a network error. Please contact support.");
           }
         },
         prefill: {
-          name: user.full_name,
-          email: user.email
+          name: user?.full_name || '',
+          email: user?.email || ''
         },
         theme: {
-          color: "#14b8a6"
+          color: '#14b8a6'
+        },
+        modal: {
+          ondismiss: () => console.log("Razorpay checkout dismissed by user.")
         }
       };
 
       if (orderData.is_mock) {
-        // In mock mode, immediately complete transaction with dummy details
-        console.log("Mock mode: executing client-side verification directly.");
-        if (window.confirm("Razorpay is running in developer sandbox mode (no keys loaded). Complete mock payment?")) {
-          options.handler({
+        // Developer sandbox: no real keys on server — simulate payment
+        const confirmed = window.confirm(
+          "⚠️ Developer Sandbox Mode\n\nNo Razorpay keys are configured on this server.\nSimulate a successful ₹199 payment to test the upgrade flow?"
+        );
+        if (confirmed) {
+          await options.handler({
             razorpay_order_id: orderData.order_id,
-            razorpay_payment_id: "pay_mock_12345",
-            razorpay_signature: "sig_mock_12345"
+            razorpay_payment_id: 'pay_mock_12345',
+            razorpay_signature: 'sig_mock_12345'
           });
         }
         return;
       }
 
+      // Real keys present — open the Razorpay checkout overlay (iframe popup)
       const rzp = new window.Razorpay(options);
       rzp.open();
+
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to initialize checkout.");
