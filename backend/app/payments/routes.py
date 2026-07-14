@@ -67,7 +67,7 @@ async def create_payment_order(
         order_data = {
             "amount": amount_in_paise,
             "currency": "INR",
-            "receipt": f"receipt_sub_{current_user.id}_{int(time.time())}",
+            "receipt": f"sub_{str(current_user.id)[:8]}_{int(time.time()) % 100000000}",
             "payment_capture": 1
         }
         
@@ -94,21 +94,26 @@ async def verify_payment(
     db: AsyncSession = Depends(get_db)
 ):
     """Verify Razorpay payment signature and upgrade user subscription status to Premium."""
-    # Handle mock signature verification
+    # Anti-bypass: block mock mode when real Razorpay keys are configured on server
     if payload.is_mock:
+        if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET and settings.RAZORPAY_KEY_SECRET != "your_razorpay_secret_here":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Mock payments are disabled. Please complete a real payment."
+            )
         print(f"[PAYMENT] Verifying mock order: {payload.razorpay_order_id}")
         if not payload.razorpay_order_id.startswith("order_mock_"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid mock order ID"
             )
-        
+
         # Update user status to premium
         current_user.is_premium = True
         db.add(current_user)
         await db.commit()
         await db.refresh(current_user)
-        
+
         return {
             "status": "success",
             "message": "Successfully upgraded to Premium Tier (Mock Mode)!",
