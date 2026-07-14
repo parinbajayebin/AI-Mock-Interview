@@ -51,6 +51,20 @@ import PerformanceAnalytics from './components/PerformanceAnalytics';
 import InterviewHistory from './components/InterviewHistory';
 import { Brain, CheckCircle, Menu, X, Eye, EyeOff } from 'lucide-react';
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 const APIKeyGuideModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = React.useState('gemini');
 
@@ -167,6 +181,118 @@ const APIKeyGuideModal = ({ isOpen, onClose }) => {
           <button onClick={onClose} className="btn-primary px-5 py-2 text-xs">
             Got it
           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PremiumPlansModal = ({ isOpen, onClose, onUpgrade }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
+      
+      {/* Modal Container */}
+      <div className="relative w-full max-w-2xl bg-white/80 backdrop-blur-2xl border border-white/60 rounded-signal-xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col z-50 text-left">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-200/60 flex items-center justify-between">
+          <div>
+            <h3 className="font-display font-bold text-lg text-slate-900">Choose Your Practice Plan</h3>
+            <p className="text-xs text-slate-600 mt-0.5">Upgrade to unlock advanced ATS diagnostics and real company mocks</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-signal-md text-slate-500 hover:text-slate-800 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content Area */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Free Tier Card */}
+            <div className="glass-panel p-5 rounded-signal-lg border border-slate-200/60 flex flex-col justify-between">
+              <div>
+                <h4 className="font-display font-bold text-md text-slate-900">Free Tier</h4>
+                <p className="text-[11px] text-slate-500 mt-1">Get started with general interview readiness checks</p>
+                <div className="my-4">
+                  <span className="font-display font-black text-2xl text-slate-900">₹0</span>
+                  <span className="text-xs text-slate-500 font-bold ml-1">/ forever</span>
+                </div>
+                <ul className="space-y-2.5 text-xs text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                    <span>2 standard mock interviews</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Basic resume parser feedback</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                    <span>General interview questions</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-slate-400 line-through">
+                    <X className="w-3.5 h-3.5" />
+                    <span>Company Career Page Targeting</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-slate-400 line-through">
+                    <X className="w-3.5 h-3.5" />
+                    <span>ATS Resume Gap Analysis</span>
+                  </li>
+                </ul>
+              </div>
+              <button disabled className="w-full mt-6 py-2 px-4 rounded-signal-md text-xs font-bold bg-slate-100 text-slate-400 cursor-not-allowed">
+                Current Plan
+              </button>
+            </div>
+
+            {/* Premium Tier Card */}
+            <div className="glass-panel p-5 rounded-signal-lg border-2 border-accent relative flex flex-col justify-between bg-gradient-to-b from-accent/5 to-transparent">
+              <span className="absolute -top-3 right-4 bg-accent text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm animate-pulse">
+                Recommended
+              </span>
+              <div>
+                <h4 className="font-display font-bold text-md text-slate-900 flex items-center gap-1.5">
+                  Premium Tier <Sparkles className="w-4 h-4 text-accent fill-accent/15" />
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-1">Accelerate your placement preparation with targeting</p>
+                <div className="my-4">
+                  <span className="font-display font-black text-2xl text-slate-900">₹199</span>
+                  <span className="text-xs text-slate-500 font-bold ml-1">/ month</span>
+                </div>
+                <ul className="space-y-2.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2 font-semibold text-teal-600">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 fill-teal-50" />
+                    <span>2 Host Credit Mocks (then BYOK)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-accent fill-accent/5" />
+                    <span>Real-time Job Post Scraping</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-accent fill-accent/5" />
+                    <span>ATS Scorer & Skill Gap Matrix</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-accent fill-accent/5" />
+                    <span>Line-by-line Resume Bullet Rewriter</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-accent fill-accent/5" />
+                    <span>Company Cultural values simulator</span>
+                  </li>
+                </ul>
+              </div>
+              <button 
+                onClick={onUpgrade} 
+                className="w-full mt-6 py-2 px-4 rounded-signal-md text-xs font-bold bg-accent hover:bg-accent-secondary text-white shadow-md hover:shadow-lg transition-all"
+              >
+                Upgrade to Premium
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -503,7 +629,16 @@ const BYOKWidget = ({
   );
 };
 
-const renderUserTierBadge = (provider, model) => {
+const renderUserTierBadge = (provider, model, isPremium) => {
+  if (isPremium && (provider === 'default' || !provider)) {
+    return (
+      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+        Premium Tier
+      </span>
+    );
+  }
+  
   if (provider === 'default' || !provider) {
     return (
       <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full select-none">
@@ -561,6 +696,7 @@ const Dashboard = () => {
   const [completedInterviewId, setCompletedInterviewId] = React.useState(null);
   const [ongoingInterview, setOngoingInterview] = React.useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [plansModalOpen, setPlansModalOpen] = React.useState(false);
 
   // BYOK State Management
   const [byokProvider, setByokProvider] = React.useState('default');
@@ -609,6 +745,96 @@ const Dashboard = () => {
     setByokGroqKey(groqKey);
     setByokOpenRouterKey(openrouterKey);
     setByokModel(model);
+  };
+
+  const handleUpgrade = async () => {
+    try {
+      const resScript = await loadRazorpayScript();
+      if (!resScript) {
+        alert("Failed to load Razorpay SDK. Please check your internet connection.");
+        return;
+      }
+
+      // 1. Create order on backend
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/payments/create-order`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create order on payment gateway.');
+      }
+
+      const orderData = await response.json();
+
+      // 2. Options for Razorpay checkout window
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "InterviewSignal Premium",
+        description: "Unlock Unlimited Mocks & Company Targeting",
+        image: "https://aistudio.google.com/static/images/logo.png",
+        order_id: orderData.order_id,
+        handler: async function (paymentRes) {
+          // Triggered on successful checkout
+          try {
+            const verifyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/payments/verify`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: paymentRes.razorpay_order_id || orderData.order_id,
+                razorpay_payment_id: paymentRes.razorpay_payment_id || 'pay_mock_id',
+                razorpay_signature: paymentRes.razorpay_signature || 'sig_mock_id',
+                is_mock: orderData.is_mock
+              })
+            });
+
+            if (verifyRes.ok) {
+              alert("Payment Verified! Your account is upgraded to Premium!");
+              window.location.reload();
+            } else {
+              const err = await verifyRes.json();
+              alert(err.detail || "Payment verification failed.");
+            }
+          } catch (e) {
+            console.error("Verification error:", e);
+            alert("Verification failed due to network error.");
+          }
+        },
+        prefill: {
+          name: user.full_name,
+          email: user.email
+        },
+        theme: {
+          color: "#14b8a6"
+        }
+      };
+
+      if (orderData.is_mock) {
+        // In mock mode, immediately complete transaction with dummy details
+        console.log("Mock mode: executing client-side verification directly.");
+        if (window.confirm("Razorpay is running in developer sandbox mode (no keys loaded). Complete mock payment?")) {
+          options.handler({
+            razorpay_order_id: orderData.order_id,
+            razorpay_payment_id: "pay_mock_12345",
+            razorpay_signature: "sig_mock_12345"
+          });
+        }
+        return;
+      }
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to initialize checkout.");
+    }
   };
 
   React.useEffect(() => {
@@ -731,10 +957,42 @@ const Dashboard = () => {
                   <div className="min-w-0 flex-1 flex flex-col items-start">
                     <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight w-full text-left">{user.full_name}</h4>
                     <p className="text-[11px] text-muted truncate mt-0.5 w-full text-left">{user.email}</p>
-                    {renderUserTierBadge(byokProvider, byokModel)}
+                    <div className="flex flex-wrap gap-1 items-center mt-1">
+                      {renderUserTierBadge(byokProvider, byokModel, user?.is_premium)}
+                      {user?.is_premium && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full select-none shadow-sm uppercase shrink-0">
+                          <Sparkles className="w-2 h-2 text-amber-500 fill-amber-500" />
+                          Premium
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Upgrade Promo (only if basic) */}
+              {!user?.is_premium && (
+                <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-signal-lg p-3.5 flex flex-col gap-2 relative overflow-hidden text-left shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-amber-500/20 text-amber-600 rounded-md">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    </div>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-700">Free Practice Limit</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-normal">
+                    Upgrade to unlock company-specific targeting & advanced ATS diagnostics.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setPlansModalOpen(true);
+                    }}
+                    className="w-full mt-1 py-2 px-3 rounded-signal-md text-[11px] font-black bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow transition-all text-center flex items-center justify-center gap-1"
+                  >
+                    Upgrade Plan <Sparkles className="w-2.5 h-2.5 fill-white/10" />
+                  </button>
+                </div>
+              )}
 
               {/* Nav Tabs */}
               <nav className="space-y-1">
@@ -818,10 +1076,39 @@ const Dashboard = () => {
                   <div className="min-w-0 flex-1 flex flex-col items-start">
                     <h4 className="font-display font-bold text-[13px] text-primary truncate leading-tight w-full text-left">{user.full_name}</h4>
                     <p className="text-[11px] text-muted truncate mt-0.5 w-full text-left">{user.email}</p>
-                    {renderUserTierBadge(byokProvider, byokModel)}
+                    <div className="flex flex-wrap gap-1 items-center mt-1">
+                      {renderUserTierBadge(byokProvider, byokModel, user?.is_premium)}
+                      {user?.is_premium && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full select-none shadow-sm uppercase shrink-0">
+                          <Sparkles className="w-2 h-2 text-amber-500 fill-amber-500" />
+                          Premium
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Upgrade Promo (only if basic) */}
+              {!user?.is_premium && (
+                <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-signal-lg p-3 flex flex-col items-start gap-2 text-left relative overflow-hidden shadow-[0_4px_15px_rgba(245,158,11,0.05)]">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-amber-500/20 text-amber-600 rounded-md">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    </div>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-700">Free Practice Limit</span>
+                  </div>
+                  <p className="text-[10px] text-slate-600 leading-normal">
+                    Upgrade to unlock company-specific targeting & advanced ATS diagnostics.
+                  </p>
+                  <button 
+                    onClick={() => setPlansModalOpen(true)}
+                    className="w-full mt-1.5 py-1.5 px-3 rounded-signal-md text-[10px] font-black bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow transition-all text-center flex items-center justify-center gap-1"
+                  >
+                    Upgrade Plan <Sparkles className="w-2.5 h-2.5 fill-white/10" />
+                  </button>
+                </div>
+              )}
 
               {/* Nav Tabs */}
               <nav className="space-y-1">
@@ -1211,6 +1498,12 @@ const Dashboard = () => {
       <APIKeyGuideModal 
         isOpen={guideOpen} 
         onClose={() => setGuideOpen(false)} 
+      />
+
+      <PremiumPlansModal
+        isOpen={plansModalOpen}
+        onClose={() => setPlansModalOpen(false)}
+        onUpgrade={handleUpgrade}
       />
 
       {/* Mobile BYOK Feature Alert Toast */}
